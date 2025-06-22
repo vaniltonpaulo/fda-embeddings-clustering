@@ -1,0 +1,102 @@
+# ────────────────────────────────
+#  0 · Packages needed + Data
+# ────────────────────────────────
+#Some of the packages we need
+library(refund)      # provides the COVID-19 mortality data
+library(tidyverse)   # data wrangling & ggplot2
+library(tidyfun)     # tf objects + pasta-themed geoms
+library(lubridate)   # nicer date helpers (optional)
+
+
+data("COVID19", package = "refund")   
+
+#Here we are getting a Overview of the dataset
+glimpse(COVID19)
+#dim(COVID19). its a list so we get Null
+#View(COVID19)
+names(COVID19)
+
+
+# helper: convert a Date vector to a numeric grid for tidyfun
+# we need a numeric  vector. 
+#We convert the dates into simple numbers (days since the very first week), because the args of tfd  need numbers, not dates.
+num_grid <- function(dates) as.numeric(dates - min(dates))
+
+
+# ────────────────────────────────
+#  1 · Weekly US all‐cause mortality (2017–2020)
+#
+# ────────────────────────────────
+
+#Its standard in tidyfun to create a tibble(part of the pipeline)
+
+#In a long format
+nat_weekly <- tibble(
+  # week-start dates
+  date   = COVID19$US_weekly_mort_dates,
+  #the weekly all-cause death counts  
+  #Divide by 1000 to indicate numbers in thousands
+  deaths = COVID19$US_weekly_mort / 1000       
+)
+
+
+nat_weekly
+
+nat_tf <- tfd(
+  #We reshape the deaths into a 1-row matrix so it’s literally one curve through 2017 to 2020.
+  matrix(nat_weekly$deaths, nrow = 1),
+  arg = num_grid(nat_weekly$date)
+)
+
+
+# 1) Your master dates:
+all_dates <- nat_weekly$date
+
+#tells you how many days have passed since the  first week.(returns numeric value)
+num_grid <- function(dates, ref = min(nat_weekly$date)) {
+  as.numeric(dates - ref)
+}
+
+#For the blue and red rectangular shades
+shade <- tibble(
+  band      = c("2019", "2020"),
+  xmin_date = as.Date(c("2019-01-01", "2020-01-01")),
+  xmax_date = as.Date(c("2019-12-31", "2020-12-31")),
+  colour    = c("blue",   "red")
+) %>%
+  mutate(
+    xmin = num_grid(xmin_date, ref = min(nat_weekly$date)),
+    xmax = num_grid(xmax_date, ref = min(nat_weekly$date))
+  )
+
+
+day_num <- num_grid(nat_weekly$date)  # days since Jan 2017
+
+ggplot() +
+  geom_rect(
+    data = shade,
+    aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf, fill = colour),
+    inherit.aes = FALSE, alpha = .15
+  ) +
+  scale_fill_identity() +
+  geom_spaghetti(
+    data   = tibble(y = nat_tf),
+    aes(y = y),
+    colour = "steelblue", size   = .2
+  ) +
+  geom_meatballs(
+    data   = tibble(y = nat_tf),
+    aes(y = y),
+    colour = "steelblue", size   = 2   # bigger meatballs!
+  ) +
+  scale_x_continuous(
+    #Normal sequence in steps of  52 (weeks) and label them 2017, 2018
+    breaks = day_num[seq(1, nrow(nat_weekly), 52)],
+    labels = format(nat_weekly$date[seq(1, nrow(nat_weekly), 52)], "%Y"),
+    expand = c(0, 0)
+  ) +
+  labs(
+    x = "Weeks starting in January 2017",
+    y = "Weekly all-cause deaths in the US (thousands)"
+  ) +
+  theme_classic()
