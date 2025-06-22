@@ -1,0 +1,120 @@
+# ────────────────────────────────
+#  0 · Packages needed + Data
+# ────────────────────────────────
+library(refund)      
+library(tidyverse)   
+library(tidyfun)     
+library(lubridate)   
+data("COVID19", package = "refund")   
+
+# helper: convert a Date vector to a numeric grid for tidyfun
+num_grid <- function(dates, ref = min(dates)) as.numeric(dates - ref)
+
+# ────────────────────────────────
+#  1 · Weekly US all‐cause mortality (2017–2020)
+# ────────────────────────────────
+nat_weekly <- tibble(
+  date   = COVID19$US_weekly_mort_dates,
+  deaths = COVID19$US_weekly_mort / 1000       
+)
+
+nat_tf <- tfd(
+  matrix(nat_weekly$deaths, nrow = 1),
+  arg = num_grid(nat_weekly$date)
+)
+
+# FIXED: Find the actual weeks that correspond to 2019 and 2020
+# Instead of using arbitrary January 1st dates, find the actual weeks in your data
+
+# Find the first week of each year in your actual data
+weeks_2019 <- nat_weekly$date[year(nat_weekly$date) == 2019]
+weeks_2019
+weeks_2020 <- nat_weekly$date[year(nat_weekly$date) == 2020]
+weeks_2020
+
+# Create shade rectangles using actual week boundaries
+shade <- tibble(
+  band      = c("2019", "2020"),
+  xmin_date = c(min(weeks_2019), min(weeks_2020)),
+  xmax_date = c(max(weeks_2019), max(weeks_2020)),
+  colour    = c("blue", "red")
+) %>%
+  mutate(
+    xmin = num_grid(xmin_date, ref = min(nat_weekly$date)),
+    xmax = num_grid(xmax_date, ref = min(nat_weekly$date))
+  )
+
+# Alternative approach: Find weeks by date ranges
+# This finds the actual weeks that fall within each calendar year
+shade_alt <- nat_weekly %>%
+  mutate(
+    year = year(date),
+    day_num = num_grid(date, ref = min(nat_weekly$date))
+  ) %>%
+  filter(year %in% c(2019, 2020)) %>%
+  group_by(year) %>%
+  summarise(
+    xmin = min(day_num),
+    xmax = max(day_num),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    band = as.character(year),
+    colour = c("blue", "red")
+  )
+
+shade_alt
+
+day_num <- num_grid(nat_weekly$date)
+
+# Plot with corrected shading
+ggplot() +
+  geom_rect(
+    data = shade,  # or use shade_alt
+    aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf, fill = colour),
+    inherit.aes = FALSE, alpha = .15
+  ) +
+  scale_fill_identity() +
+  geom_meatballs(
+    data   = tibble(y = nat_tf),
+    aes(y = y),
+    colour = "steelblue", size = 2
+  ) +
+  scale_x_continuous(
+    # Find where each year actually starts and create matching breaks/labels
+    breaks = {
+      year_data <- nat_weekly %>%
+        mutate(year = year(date), day_num = num_grid(date)) %>%
+        group_by(year) %>%
+        slice_min(date, n = 1) %>%
+        ungroup()
+      year_data$day_num
+    },
+    labels = {
+      year_data <- nat_weekly %>%
+        mutate(year = year(date)) %>%
+        group_by(year) %>%
+        slice_min(date, n = 1) %>%
+        ungroup()
+      as.character(year_data$year)
+    },
+    expand = c(0, 0)
+  ) +
+  labs(
+    x = "Weeks starting in January 2017",
+    y = "Weekly all-cause deaths in the US (thousands)"
+  ) +
+  theme_classic()
+
+# Debug: Check the actual dates
+print("First and last dates in your data:")
+print(paste("Start:", min(nat_weekly$date)))
+print(paste("End:", max(nat_weekly$date)))
+
+print("2019 weeks range:")
+print(paste("Start:", min(weeks_2019)))
+print(paste("End:", max(weeks_2019)))
+
+print("2020 weeks range:")
+print(paste("Start:", min(weeks_2020)))
+print(paste("End:", max(weeks_2020)))

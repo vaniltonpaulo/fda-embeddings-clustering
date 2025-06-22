@@ -1,0 +1,37 @@
+library(refund)
+library(tidyverse)
+library(tidyfun)
+library(lubridate)
+
+# Load data
+data("COVID19", package = "refund")
+
+# Extract weekly data
+covid     <- COVID19$US_weekly_mort_CV19
+excess    <- COVID19$US_weekly_excess_mort_2020
+weeks2020 <- COVID19$US_weekly_excess_mort_2020_dates
+
+# Prepare long format for plotting
+plot_df <- tibble(
+  date       = rep(weeks2020, times = 2),
+  deaths     = c(excess, covid),
+  death_type = rep(c("All-cause excess", "COVID-19"), each = length(weeks2020))
+)
+
+# Plot: points only, no lines, real dates on x-axis
+ggplot(plot_df, aes(x = date, y = deaths, color = death_type)) +
+  geom_point(size = 2) +
+  scale_color_manual(values = c("blue", "red")) +
+  scale_x_date(
+    date_breaks = "3 months",
+    date_labels = "%b %Y",
+    expand = c(0, 0)
+  ) +
+  labs(
+    x = "Weeks starting in January 2020",
+    y = "All-cause excess and COVID-19 deaths in the US"
+  ) +
+  theme_classic() +
+  theme(
+    legend.position = "right"
+  )
