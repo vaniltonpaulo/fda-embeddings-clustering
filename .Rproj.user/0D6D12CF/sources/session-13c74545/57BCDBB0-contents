@@ -1,21 +1,9 @@
 # ────────────────────────────────
 #  2 · 2020 excess deaths vs. COVID-19 deaths
 # ────────────────────────────────
-
-library(refund)      # provides the COVID-19 mortality data
-library(tidyverse)   # data wrangling & ggplot2
-library(tidyfun)     # tf objects + pasta-themed geoms
-library(lubridate)   # nicer date helpers (optional)
-
-
-data("COVID19", package = "refund")   
-
 covid     <- COVID19$US_weekly_mort_CV19
-covid
 excess    <- COVID19$US_weekly_excess_mort_2020
-excess
 weeks2020 <- COVID19$US_weekly_excess_mort_2020_dates
-weeks2020
 
 
 num_grid <- function(dates) as.numeric(dates - min(dates))
@@ -39,7 +27,7 @@ ggplot(plot_df, aes(y = curve, colour = death_type)) +
     limits = c(0, max(num_grid(weeks2020))),  # force axis to start at 0
     breaks = num_grid(weeks2020)[seq(1, length(weeks2020), 13)],
     labels = format(weeks2020[seq(1, length(weeks2020), 13)], "%b\n%Y"),
-    expand = c(0.01,0.1) # This line removes the gap
+    expand = c(0.01,0.1) # This line removes the gap(not really)
   ) + #coord_cartesian(ylim = c(0, NA), expand = FALSE)+
 labs(
     x = "Weeks starting in January 2020",
