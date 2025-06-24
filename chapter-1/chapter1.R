@@ -1,6 +1,6 @@
-# ────────────────────────────────
+#  ----------------------------------
 #  0 · Packages needed + Data
-# ────────────────────────────────
+#  ----------------------------------
 #Some of the packages we need
 library(refund)      # provides the COVID-19 mortality data
 library(tidyverse)   # data wrangling & ggplot2
