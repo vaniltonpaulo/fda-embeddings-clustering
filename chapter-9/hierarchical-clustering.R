@@ -223,8 +223,7 @@ print(us_map)
 
 
 
-
-
+# ────────── first three principal components──────────────────────
 library(ggplot2)
 library(tidyfun)
 library(tibble)
