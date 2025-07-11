@@ -1,5 +1,6 @@
 library(tidyverse)
 library(tidyfun)
+library(refund)
 
 
 ## read in the data (assumes data are in the current working directory)
@@ -31,9 +32,6 @@ MIMS_mat_cn
 # ── ──────────────────────────────
 
 
-
-# … your code to read df_subj, build MIMS_mat, run fpca.face() into fpca_res
-# … and run svd(MIMS_mat_cn) into svd_res goes here …
 
 # 1) wrap as tf objects (flip sign on PCA to match the book):
 fpca_tf <- tfd(t(fpca_res$efunctions[,1:4]), arg = 1:1440) %>%
@@ -90,8 +88,7 @@ ggplot(pc_df, aes(y = curve, color = Component)) +
 
 
 
-library(tidyverse)
-library(tidyfun)
+
 
 ## ── Step 1: Same seed + 0–1 time grid ────────────────────────────────────
 set.seed(1983)
@@ -162,6 +159,9 @@ df_plt_ind$value    <- ind_vec
 
 # ── Step 4: Wrap as tfd + Plot (CORRECTED) ──────────────────────────────
 
+xinx     <- (c(1, 6, 12, 18, 23) * 60 + 1) / 1440
+xinx_lab <- c("01:00","06:00","12:00","18:00","23:00")
+
 # 4a) individuals → one row per (PC, high, id)
 ind_tf <- df_plt_ind %>%
   group_by(PC, high, id) %>%
@@ -189,10 +189,10 @@ ggplot() +
   ) +
   facet_wrap(~ PC, ncol = 2, scales = "free_y") +
   scale_x_continuous(
-    breaks = time_breaks,
-    labels = time_labels,
+    breaks = xinx,
+    labels = xinx_lab,
     expand = c(0, 0)
-  ) +
+  )+
   labs(
     x     = "Time of Day (hh:mm)",
     y     = expression("MIMS: " * W[i](s)),
