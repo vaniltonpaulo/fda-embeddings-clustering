@@ -230,6 +230,8 @@ library(tibble)
 library(dplyr)
 
 # Time in weeks since Jan 1, 2020
+dates  <- as.Date(COVID19$US_weekly_excess_mort_2020_dates)
+
 reference_date <- as.Date("2020-01-01")
 tnum <- as.numeric(dates - reference_date)
 
