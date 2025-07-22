@@ -1,23 +1,25 @@
+# ──────────────── K-means clustering of the functional data ──────────────────────────────
 
-dates <- as.Date(dates)  # Ensure it's Date class
+#dates <- as.Date(dates)  # Ensure it's Date class
+#tnum <- as.numeric(dates - min(dates))
 
-
-tnum <- as.numeric(dates - min(dates))
-
-
-
+#logic taken from the book. rember the wheel...
 rownames(Wd) <- states
 set.seed(1000)
 km    <- kmeans(Wd, centers = 3)
 cl_ind <- km$cluster
 cl_cen <- km$centers
 
-# Use their exact dates and numeric conversion with fixed reference
-dates <- as.Date(CV19$US_weekly_excess_mort_2020_dates)
-reference_date <- as.Date("2020-01-01")  # Force reference to Jan 1, 2020
-tnum <- as.numeric(dates - reference_date)
 
-# Create tfd objects
+
+
+# Use their exact dates and numeric conversion with fixed reference
+#dates <- as.Date(CV19$US_weekly_excess_mort_2020_dates)
+#reference_date <- as.Date("2020-01-01")  # Force reference to Jan 1, 2020
+#tnum <- as.numeric(dates - reference_date)
+
+
+##  ─── Build tidyfun objects ──────────────────────
 pred_tf    <- tfd(Wd, arg = tnum)
 centers_tf <- tfd(cl_cen, arg = tnum)
 
@@ -31,7 +33,7 @@ centers_tbl <- tibble(
 # Plot with corrected date handling
 tf_plot_clusters_tf(cluster_tbl, centers_tbl) +
   scale_color_manual(
-    values = c("#AA00FF", "#FF6D00", "#00C853"),
+    values = c("#AA00FF","green", "#FF6D00"),
     name   = "Cluster"
   ) +
   scale_x_continuous(
@@ -62,14 +64,16 @@ tf_plot_clusters_tf(cluster_tbl, centers_tbl) +
 
 
 
+##  ─── US MAP PLOT ──────────────────────
 
+#I really dont know how to improve such plots or what to do with besides this.
+#this is also take from the book.
+#But at least code is working as it supposed to.
 
 #install.packages("usmap")
 library(usmap)
-library(ggplot2)
-library(tidyverse)
 
-#Define a color per group
+# color per group as per the book
 colset <- c(rgb(0.41, 0.05, 0.68), rgb(0, 1, 0), rgb(1, .55, 0))
 
 ## load state date which contains FIPS code
@@ -83,9 +87,8 @@ data_cluster <- statepop %>%
 data_cluster$cluster <- as.factor(data_cluster$cluster)
 
 ## make the US map
-p <- plot_usmap(regions = "states", data = data_cluster, values = "cluster") +
+plot_usmap(regions = "states", data = data_cluster, values = "cluster") +
   scale_fill_manual(name = "Cluster", values = colset) +
   labs(title = "") +
   theme(legend.position = "right", 
         plot.title = element_text(hjust = 0.5, face = "bold"))
-print(p)

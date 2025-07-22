@@ -1,13 +1,16 @@
-# ────────────────────────────────
-#  2 · 2020 excess deaths vs. COVID-19 deaths
-# ────────────────────────────────
+# ──────────────Weekly US COVID-19 mortality data──────────────────
+#Visualization of COVID-19 and all-cause mortality
+
+
+# ────────────── Data ──────────────────
 covid     <- COVID19$US_weekly_mort_CV19
 excess    <- COVID19$US_weekly_excess_mort_2020
 weeks2020 <- COVID19$US_weekly_excess_mort_2020_dates
 
 
-num_grid <- function(dates) as.numeric(dates - min(dates))
+#num_grid <- function(dates) as.numeric(dates - min(dates))
 
+# ────────────── Turn into tfd ──────────────────
 
 death_tf <- tfd(
   rbind(excess, covid),
@@ -19,6 +22,8 @@ plot_df <- tibble(
   curve      = death_tf
 )
 
+# ──────────────── Plot ────────────────
+##Plot excess weekly US all-cause excess mortality and COVID-19 mortality in 2019
 
 ggplot(plot_df, aes(y = curve, colour = death_type)) +
   geom_meatballs(size = 3) +

@@ -1,32 +1,46 @@
-############################################################
-## Exploratory plots and analyses ##
-############################################################
+#chapter 9
+
+# ────────────────US all-cause excess and Covid-19 mortality──────────────────────────────
+
+#Clustering approaches for functional data and it is applied to the US Covid-19 weekly
+#all-cause excess mortality data
 
 
 
-library(refund)    # COVID19 data
-library(tidyfun)   # tfd(), geom_spaghetti()
-library(dplyr)     # tibble(), mutate()
-library(ggplot2)   # plotting
-library(scales)    # pretty_breaks()
+# ─── Packages ───────────────────────────────────────────
+library(refund)    
+library(tidyfun)   
+library(tidyverse)  
+library(scales)    
+
+# ─── Data ────────────────────────────
 
 data("COVID19", package = "refund")
 
-# 1 · Extract and wrap (following the alternative's approach)
 states <- COVID19$US_states_names
-#dates  <- COVID19$US_weekly_excess_mort_2020_dates
+dates  <- COVID19$US_weekly_excess_mort_2020_dates
 Wd     <- COVID19$States_excess_mortality_per_million
 
+# Force reference to Jan 1, 2020
+num_grid_v2 <- function(dates, ref = as.Date("2020-01-01")) as.numeric(dates - ref)
+
+
 # Use their exact dates and numeric conversion with fixed reference
-dates <- as.Date(CV19$US_weekly_excess_mort_2020_dates)
-reference_date <- as.Date("2020-01-01")  # Force reference to Jan 1, 2020
-tnum <- as.numeric(dates - reference_date)
+#dates <- as.Date(CV19$US_weekly_excess_mort_2020_dates)
+#reference_date <- as.Date("2020-01-01") 
+#as.numeric(dates - reference_date)
+
+tnum <- num_grid_v2(dates)
 
 
+  
+# ─────────────────── tibble (Turn into tfd) ─────────────
 
+#just a tibble to organize highlighted the states and their curves
 df_tf <- tibble(
   state     = states,
-  mortality = tfd(Wd, arg = tnum)  # Use dates directly as argvals
+  #the curves
+  mortality = tfd(Wd, arg = tnum)  
 ) %>%
   mutate(
     highlight = if_else(
@@ -37,16 +51,18 @@ df_tf <- tibble(
                                              "New Jersey","Louisiana","California","Maryland","Texas"))
   )
 
-# 2 · Colors (same as alternative)
+# the colors in the book were so pale, needed something more vibrant
 cols <- c(
-  "Other"      = "grey85",   # keep background subtle
-  "New Jersey" = "#00C853",  # fluorescent green
-  "Louisiana"  = "#D50000",  # deep vivid red
-  "California" = "#2962FF",  # electric blue
-  "Maryland"   = "#AA00FF",  # intense purple
-  "Texas"      = "#FF6D00"   # blazing orange
+  "Other"      = "grey85",   
+  "New Jersey" = "#00C853",  
+  "Louisiana"  = "#D50000",  
+  "California" = "#2962FF",  
+  "Maryland"   = "#AA00FF",  
+  "Texas"      = "#FF6D00"   
 )
 
+# ─── Plot ────────────────────────────────
+#Exploratory plots and analyses
 
 ggplot(df_tf) +
   geom_spaghetti(aes(y = mortality, colour = highlight, group = state)) +
@@ -74,7 +90,7 @@ ggplot(df_tf) +
 
 
 # ────────── Summary of Analysis──────────────────────
-#The logic and code was taken directly from the book
+#The logic and code was taken directly from the book(copy and paste)
 
 # extract week 10 (i.e. the 10th column)
 week10 <- Wd[, 10]

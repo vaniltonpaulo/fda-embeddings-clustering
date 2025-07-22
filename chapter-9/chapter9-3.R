@@ -1,19 +1,26 @@
 # ────────── Hierarchical clustering of functional data──────────────────────
+
+
+# ─── Packages ────────────────────────────────────────────────────────────────
+library(refund)     
+library(tidyfun)    
+library(tidyverse)  
+library(viridis)    
 library(factoextra)
 
-# 1. Compute distances and cluster as before
+# Compute distances and cluster as before
 dist_matrix <- stats::dist(Wd)^2
-hc          <- hclust(dist_matrix, method = "ward.D2")
+hc <- hclust(dist_matrix, method = "ward.D2")
 
-# 2. Build a palette‐generating function from your exact hex codes
-base_cols   <- c("#E69A8DFF", "#F6D55C", "#2A9D8F", "#5F4B8BFF", "#ee7600")
-my_pal_fun  <- colorRampPalette(base_cols)
+# Build a palette‐generating function from the book( exact hex codes)
+base_cols <- c("#E69A8DFF", "#F6D55C", "#2A9D8F", "#5F4B8BFF", "#ee7600")
+my_pal_fun <- colorRampPalette(base_cols)
 
-# 3. Actually generate exactly k = 5 colors
+#generate exactly k = 5 colors
 k_clusters  <- 5
 cluster_cols <- my_pal_fun(k_clusters)
 
-# 4. Pass that vector to the `palette=` argument
+# ─── plot  ────────────────────────────────────────────────────────────────
 fviz_dend(hc,
           k          = k_clusters,
           rect       = TRUE,        # draw cluster rectangles
@@ -32,12 +39,6 @@ fviz_dend(hc,
 
 
 
-# ─── Packages ────────────────────────────────────────────────────────────────
-library(refund)     # for COVID19 data
-library(tidyfun)    # for tfd() + gglasagna()
-library(dplyr)      # for tibble() + mutate()
-library(ggplot2)    # for facets & scales
-library(viridis)    # for plasma()
 
 # ─── Data prep ──────────────────────────────────────────────────────────────
 states <- COVID19$US_states_names
@@ -45,22 +46,27 @@ Wd     <- COVID19$States_excess_mortality_per_million
 dates  <- as.Date(COVID19$US_weekly_excess_mort_2020_dates)
 
 # Numeric time: days since 2020-01-01
-tnum <- as.numeric(dates - as.Date("2020-01-01"))
+#tnum <- as.numeric(dates - as.Date("2020-01-01"))
 
 # ─── Hierarchical clustering ─────────────────────────────────────────────────
 rownames(Wd)  <- states
 hc             <- hclust(dist(Wd)^2, method = "ward.D2")
-state_order    <- rownames(Wd)[hc$order]            # the 52 states in dendrogram order
-row_order_vec  <- match(states, state_order)        # for each state, its position in that order
+# the 52 states in dendrogram order
+state_order    <- rownames(Wd)[hc$order] 
+# for each state, its position in that order
+row_order_vec  <- match(states, state_order)        
 
 # ─── Build tidyfun tibble ───────────────────────────────────────────────────
+#this results in a tibble where each state has its own curve
 df_tf <- tibble(
   state     = states,
-  mortality = tfd(Wd, arg = tnum),   # wrap your 52-length vectors as `tf`
-  row_order = row_order_vec          # numeric: 1–52 in cluster order
+  # wrap  52-length vectors as tfd as per usual
+  mortality = tfd(Wd, arg = tnum),   
+  # numeric: 1–52 in cluster order
+  row_order = row_order_vec          
 )
 
-# ─── Plot with gglasagna() ───────────────────────────────────────────────────
+# ─── Plot  ───────────────────────────────────────────────────
 
 
 # Replicate the original's color strategy
@@ -114,18 +120,20 @@ head(data.frame(
 
 
 # Check if tfd() is preserving the original values
-range(Wd, na.rm = TRUE)  # Original data range
-range(as.matrix(df_tf$mortality), na.rm = TRUE)  # Your tfd data range
+
+# Original data range
+range(Wd, na.rm = TRUE)  
+#  tfd data range
+range(as.matrix(df_tf$mortality), na.rm = TRUE) 
 
 
 
 
 
 
+##  ─── US MAP PLOT ──────────────────────
 
 
-#this needs to be improved
-# IMPROVED: More systematic cluster relabeling
 cut_wardd2 <- cutree(hc, k = 5)
 
 # Get the order of clusters as they appear in the dendrogram (left to right)
@@ -138,11 +146,9 @@ cluster_reorder <- rank(cluster_first_appearance)
 # Relabel clusters based on dendrogram order
 relabeled_clusters <- cluster_reorder[cut_wardd2]
 
-# IMPROVED: Better color palette and naming
 clust.col <- c("#E69A8DFF", "#F6D55C", "#2A9D8F", "#5F4B8BFF", "#ee7600")
 cluster_names <- c("Early Peak", "Sustained High", "Late Peak", "Moderate", "Low Impact")
 
-# IMPROVED: Enhanced data preparation
 data("statepop")
 state_cluster <- data.frame(
   full = names(cut_wardd2), 
@@ -155,8 +161,7 @@ data_cluster <- statepop %>%
   select(fips, cluster, cluster_name) %>%
   mutate(cluster = as.factor(cluster))
 
-# IMPROVED: Enhanced map with better styling
-p_improved <- plot_usmap(regions = "states", data = data_cluster, values = "cluster") +
+plot_usmap(regions = "states", data = data_cluster, values = "cluster") +
   scale_fill_manual(
     name = "Mortality Pattern", 
     values = clust.col,
@@ -176,13 +181,13 @@ p_improved <- plot_usmap(regions = "states", data = data_cluster, values = "clus
   ) +
   guides(fill = guide_legend(nrow = 1))
 
-print("=== IMPROVED ORIGINAL MAP ===")
-print(p_improved)
 
 
 
+# ─── Distributional clustering ───────────────────────────────────────────────────
 
-# Load required libraries
+#Again dont know how to improve on this from the book
+# Load  libraries
 library(mclust)
 library(usmap)
 library(dplyr)
@@ -208,7 +213,7 @@ data_cluster <- statepop %>%
   select(fips, cluster)
 
 # Plot the US map
-us_map <- plot_usmap(regions = "states", data = data_cluster, values = "cluster") +
+ plot_usmap(regions = "states", data = data_cluster, values = "cluster") +
   scale_fill_manual(name = "Cluster", values = cluster_colors) +
   labs(title = "") +
   theme(
@@ -218,22 +223,25 @@ us_map <- plot_usmap(regions = "states", data = data_cluster, values = "cluster"
 
 # Print the map with adjusted margins
 par(mar = c(4, 4, 1, 1))
-print(us_map)
 
 
 
 
-# ────────── first three principal components──────────────────────
-library(ggplot2)
-library(tidyfun)
-library(tibble)
-library(dplyr)
+# ────────── Clustering functional data ──────────────────────
+#first three principal components
 
 # Time in weeks since Jan 1, 2020
-dates  <- as.Date(COVID19$US_weekly_excess_mort_2020_dates)
-
+# dates  <- as.Date(COVID19$US_weekly_excess_mort_2020_dates)
+# 
 reference_date <- as.Date("2020-01-01")
-tnum <- as.numeric(dates - reference_date)
+# tnum <- as.numeric(dates - reference_date)
+
+t <- 1:dim(Wd)[2]
+
+#Apply functional PCA using the FACE approach
+results <- fpca.face(Y = Wd, Y.pred = Wd, center = TRUE, argvals = t,
+                     knots = 35, pve = 0.99, var = TRUE)
+
 
 # Transpose eigenfunctions to PC x time
 Phi_t <- t(results$efunctions[, 1:3])
@@ -242,17 +250,15 @@ Phi_t <- t(results$efunctions[, 1:3])
 explained <- results$evalues[1:3] / sum(results$evalues)
 pc_labels <- paste0("PC", 1:3, " (", round(100 * explained, 1), "%)")
 
-# Build tidy tibble
-# pc_df <- tibble(
-#   pc = paste0("PC", 1:3),
-#   efun = tfd(Phi_t, arg = tnum)
-# )
+# ─── Build tidy tibble( using tfd) ────────────────────────────────
+#At the end we have three curves
+
 pc_df <- tibble(
   pc = factor(pc_labels, levels = pc_labels),
   efun = tfd(Phi_t, arg = tnum)
 )
 
-# Plot
+# ─── Plot ────────────────────────────────
 ggplot(pc_df, aes(y = efun, color = pc)) +
   geom_spaghetti(alpha = 1) +
   scale_x_continuous(

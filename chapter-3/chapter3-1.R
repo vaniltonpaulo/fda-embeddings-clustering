@@ -1,20 +1,34 @@
+#chapter 3
+
+# ──────────────Application to NHANES──────────────────
+
+
+# ───────────── Packages ───────────────────
 library(tidyverse)
 library(tidyfun)
 library(refund)
+library(patchwork)
 
 
-## read in the data (assumes data are in the current working directory)
+# ───────────── Data ───────────────────
+
 df_subj <- read_rds(here::here("data","nhanes_fda_with_r.rds"))
 df_subj
+
+# ───────────── logic ───────────────────
+# Again there is no need to reinvent the wheel
 ## filter out participants 80+ and younger than 5
 df_subj <-
   df_subj %>% 
   filter(age >= 5, age < 80)
 
 df_subj
+
 ## Do fPCA on the subject-average MIMS profiles
 MIMS_mat <- unclass(df_subj$MIMS)
+
 MIMS_mat
+
 fpca_MIMS_subj <- fpca.face(MIMS_mat)
 fpca_MIMS_subj
 
@@ -24,22 +38,24 @@ MIMS_mn     <- colMeans(MIMS_mat)
 MIMS_mn
 MIMS_mat_cn <- sweep(MIMS_mat, MARGIN=2, STATS=MIMS_mn, FUN="-")
 MIMS_mat_cn
-# then do SVD
-# ── ──────────────────────────────
 
-#I commented this out due to run time
+#I commented this out due to run time but you need to run
+#otherwise nothing works G
+
 #svd_MIMS_subj <- svd(MIMS_mat_cn)
-# ── ──────────────────────────────
 
 
+# ─────────────────── Turn into tfd ─────────────
 
-# 1) wrap as tf objects (flip sign on PCA to match the book):
-fpca_tf <- tfd(t(fpca_res$efunctions[,1:4]), arg = 1:1440) %>%
-  set_names(paste0("PC", 1:4))    # we'll call them PC1–PC4 in both panels
-pca_tf  <- tfd(t(-svd_res$v[,1:4]), arg = 1:1440) %>%
+#wrap as tf objects (flip sign on PCA to match the book):
+fpca_tf <- tfd(t(fpca_MIMS_subj$efunctions[,1:4]), arg = 1:1440) %>%
+  # we'll call them PC1–PC4 in both panels
+  set_names(paste0("PC", 1:4))    
+
+pca_tf  <- tfd(t(-svd_MIMS_subj$v[,1:4]), arg = 1:1440) %>%
   set_names(paste0("PC", 1:4))
 
-# 2) build a one‐row‐per‐function tibble:
+#build a one‐row‐per‐function tibble:
 fpca_df <- tibble(Method = "fPCA", Component = names(fpca_tf), curve = fpca_tf)
 pca_df  <- tibble(Method = "PCA",  Component = names(pca_tf),  curve = pca_tf)
 pc_df   <- bind_rows(fpca_df, pca_df)
@@ -54,7 +70,8 @@ method_labeller <- as_labeller(c(
 time_breaks <- c(1, 6*60, 12*60, 18*60, 23*60)
 time_labels <- c("01:00","06:00","12:00","18:00","23:00")
 
-# 5) the plot
+# ─────────────────── Plot ─────────────
+
 ggplot(pc_df, aes(y = curve, color = Component)) +
   geom_spaghetti() +
   facet_grid(~Method, scales = "free_y", labeller = method_labeller) +
@@ -88,11 +105,17 @@ ggplot(pc_df, aes(y = curve, color = Component)) +
 
 
 
+#Goal:
+#Interpreting the functional PCs may be challenging, particularly for PCs which explain a relatively 
+#low proportion of variance. One visualization technique is to plot the distribution of curves which 
+#load lowest/highest on a particular PC. Here, we plot the individuals in the bottom and top 10% of 
+#scores for the first four PCs. The code below calculates these quantities.
 
 
-## ── Step 1: Same seed + 0–1 time grid ────────────────────────────────────
 set.seed(1983)
+# number of eigenfunctions to plot
 K     <- 4
+# number of sample curves to plot for each PC
 n_plt <- 10
 sind  <- seq(0, 1, length.out = 1440)
 
@@ -101,7 +124,7 @@ xinx     <- (c(1,6,12,18,23)*60 + 1) / 1440
 xinx_lab <- c("01:00","06:00","12:00","18:00","23:00")
 
 
-## ── Step 2: Templates with “PC 1” etc. ───────────────────────────────────
+## ── Templates with “PC 1” etc. ───────────────────────────────────
 df_plt_ind <- expand.grid(
   sind = sind,
   id   = 1:n_plt,
@@ -121,34 +144,29 @@ df_plt_ind_mu <- expand.grid(
   mutate(high = factor(high, levels = c("low","high")))
 
 
-## ── Step 3: Loop *on* the FPCA‐fitted curves Yhat ─────────────────────────
+## ── Loop on the FPCA‐fitted curves Yhat ─────────────────────────
 
-# run your FPCA once:
-df_subj   <- read_rds(here::here("data","nhanes_fda_with_r.rds")) %>% 
-  filter(age >= 5, age < 80)
-MIMS_mat  <- unclass(df_subj$MIMS)
-fpca_res  <- fpca.face(MIMS_mat)               # from refund::fpca.face()
 
 mu_vec    <- c()
 ind_vec   <- c()
 
 for(k in 1:K) {
   # 3a) 10th / 90th score cutoffs
-  sc   <- fpca_res$scores[,k]
+  sc   <- fpca_MIMS_subj$scores[,k]
   q    <- quantile(sc, c(0.1, 0.9))
   lo   <- which(sc <= q[1])
   hi   <- which(sc >  q[2])
   
   # 3b) group means from *Yhat*
-  mu_lo   <- colMeans(fpca_res$Yhat[lo,  ])
-  mu_hi   <- colMeans(fpca_res$Yhat[hi,  ])
+  mu_lo   <- colMeans(fpca_MIMS_subj$Yhat[lo,  ])
+  mu_hi   <- colMeans(fpca_MIMS_subj$Yhat[hi,  ])
   mu_vec  <- c(mu_vec, mu_lo, mu_hi)
   
   # 3c) sample n_plt curves from Yhat
   sam_lo  <- sample(lo, size = n_plt)
   sam_hi  <- sample(hi, size = n_plt)
-  ind_lo  <- as.vector(t(fpca_res$Yhat[sam_lo, ]))
-  ind_hi  <- as.vector(t(fpca_res$Yhat[sam_hi, ]))
+  ind_lo  <- as.vector(t(fpca_MIMS_subj$Yhat[sam_lo, ]))
+  ind_hi  <- as.vector(t(fpca_MIMS_subj$Yhat[sam_hi, ]))
   ind_vec <- c(ind_vec, ind_lo, ind_hi)
 }
 
@@ -157,22 +175,26 @@ df_plt_ind$value    <- ind_vec
 
 
 
-# ── Step 4: Wrap as tfd + Plot (CORRECTED) ──────────────────────────────
+# ── Wrap as tfd  ──────────────────────────────
 
 xinx     <- (c(1, 6, 12, 18, 23) * 60 + 1) / 1440
 xinx_lab <- c("01:00","06:00","12:00","18:00","23:00")
 
-# 4a) individuals → one row per (PC, high, id)
+#  individuals -> one row per (PC, high, id)
 ind_tf <- df_plt_ind %>%
   group_by(PC, high, id) %>%
   summarize(curve = tfd(value, arg = sind), .groups = "drop")
 
-# 4b) means → one row per (PC, high)
+#  means -> one row per (PC, high)
 mu_tf <- df_plt_ind_mu %>%
   group_by(PC, high) %>%
   summarize(curve = tfd(value, arg = sind), .groups = "drop")
 
-# 4c) final plot - CORRECTED VERSION
+# ─────────────────── Plot ─────────────
+#Goal:
+#We can then plot the average and individual curves. We do see the individual curves
+#which load highly on each of the first four PCs do, on average, largely reflect the shapes of the PCs, with this visual effect most strong for the first three PCs.
+
 ggplot() +
   # thin & transparent individual curves
   geom_spaghetti(
@@ -194,7 +216,7 @@ ggplot() +
     expand = c(0, 0)
   )+
   labs(
-    x     = "Time of Day (hh:mm)",
+    x     = "Time of Day",
     y     = expression("MIMS: " * W[i](s)),
     color = "Group"
   ) +

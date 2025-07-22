@@ -1,22 +1,14 @@
-# Load required libraries
-library(tidyverse)
-library(tidyfun)
-library(refund)
+#This is  a comparison of fpca.face to refund::fpca2s
+#inspiration: https://cran.r-project.org/web/packages/refund/refund.pdf
+#page 69.Prof.Scheipl is referenced
 
-# 1) Load and filter the NHANES data
-df_subj <- read_rds(here::here("data","nhanes_fda_with_r.rds")) %>%
-  filter(age >= 5, age < 80)
+# ───────────── Logic ───────────────────
 
-# 2) Extract the subject-average MIMS profiles as a matrix
-MIMS_mat <- unclass(df_subj$MIMS)  # dimensions: n_subjects × 1440
 
-# 3) Define argument values explicitly (grid on [0,1])
 argvals <- seq(0, 1, length.out = ncol(MIMS_mat))
 
-# 4) Run fPCA via FACE (refund::fpca.face)
-fpca_face_res <- fpca.face(MIMS_mat)
 
-# 5) Run fPCA via two-stage method (refund::fpca2s)
+# Run fPCA via two-stage method (refund::fpca2s)
 #    - Stage 1: SVD, Stage 2: smooth right singular vectors
 #    - Provide explicit argvals; override default npc if needed
 default_res <- fpca2s(Y = MIMS_mat, argvals = argvals)
@@ -27,14 +19,19 @@ if (default_res$npc < n_pc) {
   fpca_2s_res <- default_res
 }
 
-# 6) Prepare argument grids for plotting
+#Prepare argument grids for plotting
 arg_face <- 1:ncol(MIMS_mat)
+
+
 # Use the same argvals defined above, scaled to minutes
 arg_2s <- argvals * ncol(MIMS_mat)
 
-# 7) Extract and wrap the first n_pc eigenfunctions as tidyfuns
+
+# ─────────────────── Turn into tfd ─────────────
+
+# Lets extract and wrap the first n_pc eigenfunctions as tidyfun obj (that usually works)
 pc_face_tf <- tfd(
-  t(fpca_face_res$efunctions[, 1:n_pc]),
+  t(fpca_MIMS_subj$efunctions[, 1:n_pc]),
   arg = arg_face
 ) %>%
   set_names(paste0("PC", 1:n_pc))
@@ -45,7 +42,7 @@ pc_2s_tf <- tfd(
 ) %>%
   set_names(paste0("PC", 1:n_pc))
 
-# 8) Build a combined tibble for plotting
+#combined tibble 
 df_face <- tibble(
   Method    = "FACE",
   Component = names(pc_face_tf),
@@ -58,13 +55,14 @@ df_2s <- tibble(
 )
 plot_df <- bind_rows(df_face, df_2s)
 
-# 9) Facet labels and time-axis settings
+
+# ─────────────────── Plot + comparsion plots ─────────────
+
+# Facet labels and time-axis settings
 method_labeller <- as_labeller(c(FACE = "(A) FACE", `2S` = "(B) Two-Stage"))
 time_breaks <- c(1, 6*60, 12*60, 18*60, 23*60)
 time_labels <- c("01:00", "06:00", "12:00", "18:00", "23:00")
 
-# 10) Plot separately and combine
-library(patchwork)
 
 # FACE plot
 p_face <- ggplot(df_face, aes(y = curve, color = Component)) +
@@ -76,7 +74,7 @@ p_face <- ggplot(df_face, aes(y = curve, color = Component)) +
   ) +
   labs(
     title = "(A) FACE",
-    x = "Time of Day (min)",
+    x = "Time of Day",
     y = expression(phi[k](s)),
     color = "Component"
   ) +
@@ -100,7 +98,7 @@ p_2s <- ggplot(df_2s, aes(y = curve, color = Component)) +
   ) +
   labs(
     title = "(B) Two-Stage",
-    x = "Time of Day (min)",
+    x = "Time of Day",
     y = expression(phi[k](s)),
     color = "Component"
   ) +

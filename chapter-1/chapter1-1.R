@@ -1,32 +1,40 @@
-#  ----------------------------------
-#  0 · Packages needed + Data
-#  ----------------------------------
-#Some of the packages we need
-library(refund)      # provides the COVID-19 mortality data
-library(tidyverse)   # data wrangling & ggplot2
-library(tidyfun)     # tf objects + pasta-themed geoms
-library(lubridate)   # nicer date helpers (optional)
+#Chapter 1
+
+# ──────────────Focus: COVID-19 US Mortality Data──────────────────
+
+# Exploratory plots for all-cause and COVID-19 weekly mortality data in the US
+
+#Goals:
+#.   To visualize all-cause total and excess mortality (mortality in a week in 2020 minus
+#      mortality in the coresponding week in 2019)
+
+#.  To visualize total COVID-19 mortality as a function of time.
+
+# ─────────────Packages───────────────────
+# Here I am Importing all the packages 
+# ────────────────────────────────
+library(refund)      
+library(tidyverse)   
+library(tidyfun)     
 
 
+# ─────────────Overview───────────────────
 data("COVID19", package = "refund")   
-
-#Here we are getting a Overview of the dataset
 glimpse(COVID19)
-#dim(COVID19). its a list so we get Null
-#View(COVID19)
-names(COVID19)
 
 
-# helper: convert a Date vector to a numeric grid for tidyfun
-# we need a numeric  vector. 
-#We convert the dates into  numbers (days since the very first week), because the args of tfd  need numbers, not dates.
+# ─────────────helpers───────────────────
+
+#Conversion of the dates into  numbers (days since the very first week)
+#because the args of tfd  need numbers, not dates.
 num_grid <- function(dates, ref = min(dates)) as.numeric(dates - ref)
 
 
-# ────────────────────────────────
-#  1 · Weekly US all‐cause mortality (2017–2020)
-#
-# ────────────────────────────────
+# ─────────────────── Weekly all-cause mortality in the US ─────────────
+
+
+# ─────────────────── Turn into tfd ─────────────
+
 
 #Its standard in tidyfun to create a tibble(part of the pipeline)
 
@@ -42,6 +50,7 @@ nat_weekly <- tibble(
 
 nat_weekly
 
+
 nat_tf <- tfd(
   #We reshape the deaths into a 1-row matrix so it’s literally one curve through 2017 to 2020.
   matrix(nat_weekly$deaths, nrow = 1),
@@ -50,7 +59,12 @@ nat_tf <- tfd(
 
 
 
+
+# ─────────────────── Plot ─────────────
+
 # Shading rectangles: actual full weeks of 2019 and 2020
+#The red area is 2020 and the blue area is 2019
+
 shade <- nat_weekly %>%
   filter(year(date) %in% c(2019, 2020)) %>%
   mutate(
@@ -81,7 +95,15 @@ year_ticks <- nat_weekly %>%
   slice_min(date, n = 1) %>%
   ungroup()
 
-# Plot
+
+
+#  Plot weekly all-cause US mortality 2017 to 2020
+#. The reason for the gap is because if you run this:
+# print(nat_weekly %>%
+#         filter(year(date) %in% c(2019, 2020)),n =104)
+#You will see that there is a week between the last date of 2019 and the first date of 2020
+
+
 ggplot() +
   geom_rect(
     data = shade,
