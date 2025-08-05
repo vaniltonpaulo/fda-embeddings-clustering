@@ -43,6 +43,8 @@ mW_mat <- matrix(rep(mW, each = nrow(Wr)), ncol = ncol(Wr))
 #Construct the de-meaned data. The columns of W have mean zero
 W <- Wr - mW_mat
 
+W[,1]
+
 
 
 
@@ -97,12 +99,23 @@ for(i in 1:length(emphasize)){
 }
 
 
-SVDofW <- svd(W)
-V <- SVDofW$v
-lambda <- SVDofW$d ^ 2
-propor_var <- round(100 * lambda / sum(lambda), digits = 1)
-cumsum_var <- cumsum(propor_var)
+#Calculate the SVD of 𝑊
 
+
+#Calculate theSVDofW
+SVD_of_W <- svd(W)
+#Left singularvectorsstoredbycolumns
+U <-SVD_of_W$u
+#Singular values
+d <-SVD_of_W$d
+#Right singularvectorsstoredbycolumns
+V <-SVD_of_W$v
+#Calculate theeigenvalues
+lambda <-SVD_of_W$d^2
+#Individual proportionofvariation
+propor_var <- round(100 * lambda / sum(lambda), digits = 1)
+#Cumulative proportionofvariation
+cumsum_var <- cumsum(propor_var)
 
 
 plot(current_date, V[,1], type = "l", lwd = 2.5, 

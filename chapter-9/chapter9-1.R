@@ -51,14 +51,16 @@ df_tf <- tibble(
                                              "New Jersey","Louisiana","California","Maryland","Texas"))
   )
 
+df_tf
+
 # the colors in the book were so pale, needed something more vibrant
 cols <- c(
   "Other"      = "grey85",   
-  "New Jersey" = "#00C853",  
-  "Louisiana"  = "#D50000",  
-  "California" = "#2962FF",  
-  "Maryland"   = "#AA00FF",  
-  "Texas"      = "#FF6D00"   
+  "New Jersey" = "darkseagreen3",  
+  "Louisiana"  = "red",  
+  "California" = "plum3",  
+  "Maryland"   = "deepskyblue4",  
+  "Texas"      = "salmon"   
 )
 
 # ─── Plot ────────────────────────────────
@@ -90,36 +92,66 @@ ggplot(df_tf) +
 
 
 # ────────── Summary of Analysis──────────────────────
-#The logic and code was taken directly from the book(copy and paste)
 
-# extract week 10 (i.e. the 10th column)
+
+Wd_tfd <- tfd(Wd, arg = tnum)  
+
+# Extract values at week 10 for all states
+# Correct extraction
+week10_vals <- df_tf$mortality[, tnum[10]]
+
+mean_week10   <- mean(week10_vals, na.rm = TRUE)
+median_week10 <- median(week10_vals, na.rm = TRUE)
+
+mean_week10
+median_week10
+
 week10 <- Wd[, 10]
+week10
 
-# compute mean and median, dropping any NAs
-meanWd10   <- mean(week10, na.rm = TRUE)
-medianWd10 <- median(week10, na.rm = TRUE)
-
-meanWd10
-medianWd10
+week10_vals == week10
 
 
 
-ind_out <- which.max(Wd[,10])
+ind_out <- which.max(week10_vals)
+ind_out
+
+# Get the name of that state
 state_out <- states[ind_out]
-val_out <- round(Wd[ind_out, 6:14], digits = 1)
+state_out
+
+# Extract values for weeks 6 to 14 for that state
+val_out <- round(df_tf$mortality[ind_out, tnum[6:14]], 1)
+val_out
 
 
 
-topweek20 <- round(Wd[order(Wd[,20])[48:52],20], digits = 1)
-states_top_20 <- states[order(Wd[,20])[48:52]]
+
+# ---- Top 5 states at week 20 ----
+vals20 <- df_tf$mortality[, tnum[20]]
+ord20  <- order(vals20)
+topweek20 <- round(vals20[ord20][48:52], 1)
+states_top_20 <- states[ord20][48:52]
+
+topweek20
+states_top_20
 
 
-topweek30 <- round(Wd[order(Wd[,30])[48:52],30], digits = 1)
-states_top_30 <- states[order(Wd[,30])[48:52]]
+# ---- Top 5 states at week 30 ----
+vals30 <- df_tf$mortality[, tnum[30]]
+ord30  <- order(vals30)
+topweek30 <- round(vals30[ord30][48:52], 1)
+states_top_30 <- states[ord30][48:52]
+
+topweek30
+states_top_30
 
 
+# ---- Top 5 states at week 40 ----
+vals40 <- df_tf$mortality[, tnum[40]]
+ord40  <- order(vals40)
+topweek40 <- round(vals40[ord40][48:52], 1)
+states_top_40 <- states[ord40][48:52]
 
-topweek40 <- round(Wd[order(Wd[,40])[48:52],40], digits = 1)
-states_top_40 <- states[order(Wd[,40])[48:52]]
-
-
+topweek40
+states_top_40

@@ -32,7 +32,8 @@ Wd <- COVID19$States_excess_mortality_per_million
 
 
 
-#Converts weekly excess deaths to cumulative totals per state
+#Converts weekly excess deaths to cumulative totals per state (all good)
+#This is the same as Wr
 cum_mat   <- t(apply(Wd, 1, cumsum))
 
 # ─────────────────── Turn into tfd ─────────────
@@ -43,12 +44,14 @@ tf_states <- tfd(
   id  = states,
   var = "cum_excess"
 )
-
+tf_states
 # ── grand‐mean & centered curves ─────────────────────────────────────────
 #average curve across all states
 mean_curve  <- mean(tf_states)
+mean_curve
 #subtracts the mean curve from each state's curve, so that we  can analyze deviations from the national pattern.
 tf_centered <- scale(tf_states, scale = FALSE)
+tf_centered
 
 # ── Plot the data and the mean ──────────────────────────────────
 #Visualise the data for each state and territory (gray solid lines) and the mean (dark red solid lines).

@@ -5,6 +5,7 @@
 
 W_mat  <- as.matrix(tf_centered)
 SVDofW <- svd(W_mat)
+SVDofW
 d      <- SVDofW$d
 V      <- SVDofW$v
 

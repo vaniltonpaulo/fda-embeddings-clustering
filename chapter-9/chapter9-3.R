@@ -66,6 +66,8 @@ df_tf <- tibble(
   row_order = row_order_vec          
 )
 
+df_tf
+
 # ─── Plot  ───────────────────────────────────────────────────
 
 
@@ -79,14 +81,15 @@ gglasagna(
   order = row_order,
   label = state
 ) +
-  # Use the exact same breaks and colors as the original
   scale_fill_gradientn(
     colors = colors_orig,
-    values = scales::rescale(breaks_orig),  # Map breaks to 0-1 scale
+    values = scales::rescale(breaks_orig),
     breaks = c(-50, 0, 50, 100, 150, 200, 250, 300),
     limits = c(-50, 300),
     name = "EMR"
-  ) + scale_x_continuous(
+  ) +
+  guides(color = "none") +  # <--- REMOVE THE SECOND LEGEND
+  scale_x_continuous(
     breaks = function(x) {
       ref <- as.Date("2020-01-01")
       qs  <- seq(ref, max(dates), by = "3 months")
@@ -107,6 +110,7 @@ gglasagna(
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank()
   )
+
 
 
 
