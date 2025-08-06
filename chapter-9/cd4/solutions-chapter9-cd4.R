@@ -33,18 +33,27 @@ fit_face <- face.sparse(data, argvals.new = (-20:40),
                         calculate.scores = TRUE, 
                         newdata = data, pve = 0.95)
 
+fit_face
+
 #Obtain the scores. Clustering could be done on the scores
 #This time we will conduct clustering on the predicted functions
 scores <- fit_face$scores$scores
+scores
 
 data.h <- data
-tnew <- fit_face$argvals.new
 
+tnew <- fit_face$argvals.new
+tnew
+
+
+#Construct the predicted functions for each study participant. This is obtained from the fpca.sparse function fit.
 
 
 #Extract the id vector and the vector of unique ids
 id <- data.h$subj
+id
 uid <- unique(id)
+uid
 
 #Set the grid where to predict
 seq <- -20:40
@@ -78,16 +87,19 @@ for(i in 1:n){ #Begin loop over study participants
 
 
 
+#Conduct clustering of predicted functions from fpca sparse
+
 
 
 set.seed(202200228)
 cl_kmeans_CD4 <- kmeans(Pred_mat, centers = 3)
+cl_kmeans_CD4
 cl_ind_CD4 <- cl_kmeans_CD4$cluster
 cl_cen_CD4 <- cl_kmeans_CD4$centers
 
 
 
-
+#Plot the results of predicted CD4 curves together with the estimated clustering as well as centers of the clusters.
 
 par(mar = c(4, 4, 1, 1))
 colset <- c("#E69A8DFF", "#F6D55C", "#2A9D8F", "#5F4B8BFF")
