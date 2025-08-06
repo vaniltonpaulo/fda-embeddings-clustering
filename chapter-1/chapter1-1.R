@@ -10,16 +10,17 @@
 
 #.  To visualize total COVID-19 mortality as a function of time.
 
-# ─────────────Packages───────────────────
-# Here I am Importing all the packages 
-# ────────────────────────────────
+# ─Packages───────────────────
+#  Importing all the packages 
+
 library(refund)      
 library(tidyverse)   
 library(tidyfun)     
 
 
-# ─────────────Overview───────────────────
-data("COVID19", package = "refund")   
+# ────Overview───────────────────
+data("COVID19", package = "refund") 
+names(COVID19)
 glimpse(COVID19)
 
 
@@ -31,36 +32,23 @@ num_grid <- function(dates, ref = min(dates)) as.numeric(dates - ref)
 
 
 # ─────────────────── Weekly all-cause mortality in the US ─────────────
+#Data
+counts_state <- COVID19$US_weekly_mort
+date_state <- COVID19$US_weekly_mort_dates
 
 
-# ─────────────────── Turn into tfd ─────────────
+# ───Data Transformation ─────────────
 
 
 #Its standard in tidyfun to create a tibble(part of the pipeline)
-
-#In a long format
 nat_weekly <- tibble(
   # week-start dates
-  date   = COVID19$US_weekly_mort_dates,
+  date   = date_state,
   #the weekly all-cause death counts  
   #Divide by 1000 to indicate numbers in thousands
-  deaths = COVID19$US_weekly_mort / 1000       
+  deaths = counts_state / 1000       
 )
 
-
-nat_weekly
-
-
-nat_tf <- tfd(
-  #We reshape the deaths into a 1-row matrix so it’s literally one curve through 2017 to 2020.
-  matrix(nat_weekly$deaths, nrow = 1),
-  arg = num_grid(nat_weekly$date)
-)
-
-
-
-
-# ─────────────────── Plot ─────────────
 
 # Shading rectangles: actual full weeks of 2019 and 2020
 #The red area is 2020 and the blue area is 2019
@@ -104,6 +92,16 @@ year_ticks <- nat_weekly %>%
 #You will see that there is a week between the last date of 2019 and the first date of 2020
 
 
+# ─────────────────── Turn into tfd ─────────────
+nat_weekly_tfd <- tfd(
+  #We reshape the deaths into a 1-row matrix so it’s literally one curve through 2017 to 2020.
+  matrix(nat_weekly$deaths, nrow = 1),
+  arg = num_grid(nat_weekly$date)
+)
+
+
+# ─────────────────── Plot ─────────────
+
 ggplot() +
   geom_rect(
     data = shade,
@@ -112,9 +110,9 @@ ggplot() +
   ) +
   scale_fill_identity() +
   geom_meatballs(
-    data = tibble(y = nat_tf),
+    data = tibble(y = nat_weekly_tfd),
     aes(y = y),
-    colour = "steelblue", size = 2
+    colour = "steelblue", size = 2, alpha = 0.6
   ) +
   scale_x_continuous(
     breaks = year_ticks$day_num,
