@@ -2,7 +2,6 @@
 #inspiration: https://cran.r-project.org/web/packages/refund/refund.pdf
 #page 69.Prof.Scheipl is referenced
 
-# ───────────── Logic ───────────────────
 
 
 argvals <- seq(0, 1, length.out = ncol(MIMS_mat))

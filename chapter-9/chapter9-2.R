@@ -1,54 +1,5 @@
-#helpers
-
-tf_join_clusters_tf <- function(pred_tf, cluster_vec) {
-  tibble(
-    id      = seq_along(pred_tf),
-    cluster = factor(cluster_vec),
-    curve   = pred_tf
-  )
-}
-
-tf_plot_clusters_tf <- function(cluster_tbl, centers_tbl) {
-  ggplot() +
-    ## highlight centres
-    geom_spaghetti(
-      data = centers_tbl,
-      aes(y = curve, group = cluster),
-      colour = "black", linewidth = 1
-    ) +
-    geom_spaghetti(
-      data = centers_tbl,
-      aes(y = curve, colour = cluster, group = cluster),
-      linewidth = 1
-    ) +
-    ## individual subjects
-    geom_spaghetti(
-      data = cluster_tbl,
-      aes(y = curve, colour = cluster, group = id),
-      alpha = .15, linewidth = .7
-    ) +
-    scale_color_manual(
-      #values = c("#D55E00", "#009E73", "#F0E442"),
-      values = c("darkred", "darkorange", "darkgreen"),
-      name   = "Cluster"
-    ) +
-    labs(
-      x = "Time from seroconversion (months)",
-      y = "Log CD4 counts"
-    ) +
-    theme_minimal(base_size = 14)
-}
-
-
-
-
-
 # ──────────────── K-means clustering of the functional data ──────────────────────────────
 
-#dates <- as.Date(dates)  # Ensure it's Date class
-#tnum <- as.numeric(dates - min(dates))
-
-#logic taken from the book. rember the wheel...
 rownames(Wd) <- states
 set.seed(1000)
 km    <- kmeans(Wd, centers = 3)
@@ -56,14 +7,6 @@ cl_ind <- km$cluster
 cl_ind
 cl_cen <- km$centers
 cl_cen
-
-
-
-
-# Use their exact dates and numeric conversion with fixed reference
-#dates <- as.Date(CV19$US_weekly_excess_mort_2020_dates)
-#reference_date <- as.Date("2020-01-01")  # Force reference to Jan 1, 2020
-#tnum <- as.numeric(dates - reference_date)
 
 
 ##  ─── Build tidyfun objects ──────────────────────
@@ -90,7 +33,7 @@ tf_plot_clusters_tf(cluster_tbl, centers_tbl) +
       # Use 2020-01-01 as reference for quarterly breaks
       reference_date <- as.Date("2020-01-01")
       start_date <- reference_date  # Start from Jan 1, 2020
-      end_date <- max(dates)
+      end_date <- max(current_date)
       quarterly_dates <- seq(from = start_date, to = end_date, by = "3 months")
       # Convert to your numeric scale (days since 2020-01-01)
       as.numeric(quarterly_dates - reference_date)
@@ -114,13 +57,6 @@ tf_plot_clusters_tf(cluster_tbl, centers_tbl) +
 
 
 ##  ─── US MAP PLOT ──────────────────────
-
-#I really dont know how to improve such plots or what to do with besides this.
-#this is also take from the book.
-#But at least code is working as it supposed to.
-
-#install.packages("usmap")
-library(usmap)
 
 # color per group as per the book
 colset <- c(rgb(0.41, 0.05, 0.68), rgb(0, 1, 0), rgb(1, .55, 0))
@@ -207,7 +143,6 @@ state_plot_df
 us_map_df <- us_map("states")
 
 
-library(sf)
 
 # Convert state_plot_df to sf object and transform to match us_map_df
 state_plot_sf <- state_plot_df %>%

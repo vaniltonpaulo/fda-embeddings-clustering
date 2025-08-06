@@ -1,7 +1,7 @@
 #chapter 3
 
-# ──────────────Application to NHANES──────────────────
-
+# ─────────────────────── Application to NHANES ──────────────────
+#Functional Principal Components Analysis
 
 # ───────────── Packages ───────────────────
 library(tidyverse)
@@ -15,9 +15,9 @@ library(patchwork)
 df_subj <- read_rds(here::here("data","nhanes_fda_with_r.rds"))
 df_subj
 
-# ───────────── logic ───────────────────
-# Again there is no need to reinvent the wheel
-## filter out participants 80+ and younger than 5
+# ─── Data Preparation ───────────────────
+
+# filter out participants 80+ and younger than 5
 df_subj <-
   df_subj %>% 
   filter(age >= 5, age < 80)
@@ -42,12 +42,12 @@ MIMS_mat_cn
 #I commented this out due to run time but you need to run
 #otherwise nothing works G
 
-#svd_MIMS_subj <- svd(MIMS_mat_cn)
+svd_MIMS_subj <- svd(MIMS_mat_cn)
 
 
-# ─────────────────── Turn into tfd ─────────────
+# ── Turn into tfd object ─────────────
 
-#wrap as tf objects (flip sign on PCA to match the book):
+#wrap as tf objects (flip sign on PCA to match the book)
 fpca_tf <- tfd(t(fpca_MIMS_subj$efunctions[,1:4]), arg = 1:1440) %>%
   # we'll call them PC1–PC4 in both panels
   set_names(paste0("PC", 1:4))    
@@ -60,17 +60,17 @@ fpca_df <- tibble(Method = "fPCA", Component = names(fpca_tf), curve = fpca_tf)
 pca_df  <- tibble(Method = "PCA",  Component = names(pca_tf),  curve = pca_tf)
 pc_df   <- bind_rows(fpca_df, pca_df)
 
-# 3) facet labels
+#facet labels
 method_labeller <- as_labeller(c(
   fPCA = "(A) fPCA",
   PCA  = "(B) PCA"
 ))
 
-# 4) clock‐time breaks
+# clock‐time breaks
 time_breaks <- c(1, 6*60, 12*60, 18*60, 23*60)
 time_labels <- c("01:00","06:00","12:00","18:00","23:00")
 
-# ─────────────────── Plot ─────────────
+# ─ Plot ─────────────
 
 ggplot(pc_df, aes(y = curve, color = Component)) +
   geom_spaghetti() +
@@ -105,16 +105,17 @@ ggplot(pc_df, aes(y = curve, color = Component)) +
 
 
 
-#Goal:
+#─────────────────────────── Goal ──────────────────────────────────────────────────────
 #Interpreting the functional PCs may be challenging, particularly for PCs which explain a relatively 
 #low proportion of variance. One visualization technique is to plot the distribution of curves which 
-#load lowest/highest on a particular PC. Here, we plot the individuals in the bottom and top 10% of 
-#scores for the first four PCs. The code below calculates these quantities.
+#load lowest/highest on a particular PC. 
+
+#Task:Here, we plot the individuals in the bottom and top 10% of scores for the first four PCs. 
 
 
 set.seed(1983)
 # number of eigenfunctions to plot
-K     <- 4
+K <- 4
 # number of sample curves to plot for each PC
 n_plt <- 10
 sind  <- seq(0, 1, length.out = 1440)
@@ -124,7 +125,7 @@ xinx     <- (c(1,6,12,18,23)*60 + 1) / 1440
 xinx_lab <- c("01:00","06:00","12:00","18:00","23:00")
 
 
-## ── Templates with “PC 1” etc. ───────────────────────────────────
+## ── Templates with “PC 1” etc. ─────────────────
 df_plt_ind <- expand.grid(
   sind = sind,
   id   = 1:n_plt,
@@ -175,7 +176,7 @@ df_plt_ind$value    <- ind_vec
 
 
 
-# ── Wrap as tfd  ──────────────────────────────
+# ── Turn into tfd object ─────────────
 
 xinx     <- (c(1, 6, 12, 18, 23) * 60 + 1) / 1440
 xinx_lab <- c("01:00","06:00","12:00","18:00","23:00")

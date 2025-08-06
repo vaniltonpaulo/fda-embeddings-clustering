@@ -29,6 +29,8 @@ glimpse(COVID19)
 #Conversion of the dates into  numbers (days since the very first week)
 #because the args of tfd  need numbers, not dates.
 num_grid <- function(dates, ref = min(dates)) as.numeric(dates - ref)
+reference_date <- as.Date("2020-01-01")
+
 
 
 # ─────────────────── Weekly all-cause mortality in the US ─────────────
@@ -124,4 +126,6 @@ ggplot() +
     y = "Weekly all-cause deaths in the US (thousands)"
   ) +
   theme_classic() 
+
+
 

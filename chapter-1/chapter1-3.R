@@ -53,10 +53,15 @@ ggplot() +
   ) +
   scale_colour_manual(values = setNames(emph_cols, emph_states)) +
   scale_x_continuous(
-    breaks = num_grid(current_date)[seq(1, length(current_date), 13)],
-    labels = format(current_date[seq(1, length(current_date), 13)], "%b\n%Y"),
-    expand = c(0, 0)
+    name = "Weeks starting January 2020",
+    breaks = as.numeric(seq(reference_date, as.Date("2021-01-01"), by = "3 months") - reference_date),
+    labels = format(seq(reference_date, as.Date("2021-01-01"), by = "3 months"), "%b %Y")
   ) +
+  # scale_x_continuous(
+  #   breaks = num_grid(current_date)[seq(1, length(current_date), 13)],
+  #   labels = format(current_date[seq(1, length(current_date), 13)], "%b\n%Y"),
+  #   expand = c(0, 0)
+  # ) +
   coord_cartesian(ylim = c(-50, 2500)) +
   labs(
     x = "Weeks starting January 2020",

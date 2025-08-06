@@ -90,11 +90,6 @@ dat <- tibble(
 ) |>
   filter(!is.na(y) & y > 4.5)
 
-#Although not the best approach to check , we can say that up to row  333 everything its alrigth
-#dat == data
-
-#so far so good
-
 # ─── FACE smoothing & prediction grid ──────────────────
 tgrid <- -20:40
 #Also took this from the book.Again dont need to reinvent the wheel

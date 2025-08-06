@@ -1,13 +1,6 @@
 # ────────── Hierarchical clustering of functional data──────────────────────
 
 
-# ─── Packages ────────────────────────────────────────────────────────────────
-library(refund)     
-library(tidyfun)    
-library(tidyverse)  
-library(viridis)    
-library(factoextra)
-
 # Compute distances and cluster as before
 dist_matrix <- stats::dist(Wd)^2
 hc <- hclust(dist_matrix, method = "ward.D2")
@@ -20,7 +13,7 @@ my_pal_fun <- colorRampPalette(base_cols)
 k_clusters  <- 5
 cluster_cols <- my_pal_fun(k_clusters)
 
-# ─── plot  ────────────────────────────────────────────────────────────────
+# ─── plot  ───────────
 fviz_dend(hc,
           k          = k_clusters,
           rect       = TRUE,        # draw cluster rectangles
@@ -40,17 +33,9 @@ fviz_dend(hc,
 
 
 
-# ─── Data prep ──────────────────────────────────────────────────────────────
-states <- COVID19$US_states_names
-Wd     <- COVID19$States_excess_mortality_per_million
-dates  <- as.Date(COVID19$US_weekly_excess_mort_2020_dates)
-
-# Numeric time: days since 2020-01-01
-#tnum <- as.numeric(dates - as.Date("2020-01-01"))
-
-# ─── Hierarchical clustering ─────────────────────────────────────────────────
+# ─── Hierarchical clustering ────────────────────
 rownames(Wd)  <- states
-hc             <- hclust(dist(Wd)^2, method = "ward.D2")
+hc <- hclust(dist(Wd)^2, method = "ward.D2")
 # the 52 states in dendrogram order
 state_order    <- rownames(Wd)[hc$order] 
 # for each state, its position in that order
@@ -92,7 +77,7 @@ gglasagna(
   scale_x_continuous(
     breaks = function(x) {
       ref <- as.Date("2020-01-01")
-      qs  <- seq(ref, max(dates), by = "3 months")
+      qs  <- seq(ref, max(current_date), by = "3 months")
       as.numeric(qs - ref)
     },
     labels = function(x) {
@@ -114,7 +99,7 @@ gglasagna(
 
 
 
-#################checks
+#################checks(nice)
 head(data.frame(
   original_state = states,
   cluster_position = row_order_vec,
@@ -122,13 +107,6 @@ head(data.frame(
 ))
 
 
-
-# Check if tfd() is preserving the original values
-
-# Original data range
-range(Wd, na.rm = TRUE)  
-#  tfd data range
-range(as.matrix(df_tf$mortality), na.rm = TRUE) 
 
 
 
@@ -190,13 +168,6 @@ plot_usmap(regions = "states", data = data_cluster, values = "cluster") +
 
 # ─── Distributional clustering ───────────────────────────────────────────────────
 
-#Again dont know how to improve on this from the book
-# Load  libraries
-library(mclust)
-library(usmap)
-library(dplyr)
-library(ggplot2)
-
 # Set color palette
 cluster_colors <- c("#E69A8DFF", "#F6D55C", "#2A9D8F", "#5F4B8BFF")
 
@@ -231,14 +202,11 @@ par(mar = c(4, 4, 1, 1))
 
 
 
-# ────────── Clustering functional data ──────────────────────
-#first three principal components
+# ────────── Clustering functional data ────────────────────────────────
 
-# Time in weeks since Jan 1, 2020
-# dates  <- as.Date(COVID19$US_weekly_excess_mort_2020_dates)
 # 
 reference_date <- as.Date("2020-01-01")
-# tnum <- as.numeric(dates - reference_date)
+# tnum <- as.numeric(current_date - reference_date)
 
 t <- 1:dim(Wd)[2]
 

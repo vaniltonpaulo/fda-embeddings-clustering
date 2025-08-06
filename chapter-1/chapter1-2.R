@@ -30,11 +30,16 @@ ggplot(excess_tibble, aes(y = curve, colour = death_type)) +
   geom_meatballs(size = 3, alpha = 0.6) +
   scale_colour_manual(values = c("blue", "red")) +
   scale_x_continuous(
-    limits = c(0, max(num_grid(current_date))),  # force axis to start at 0
-    breaks = num_grid(current_date)[seq(1, length(current_date), 13)],
-    labels = format(current_date[seq(1, length(current_date), 13)], "%b\n%Y"),
-    expand = c(0.01,0.1) # This line removes the gap(not really)
-  ) + #coord_cartesian(ylim = c(0, NA), expand = FALSE)+
+    name = "Weeks starting January 2020",
+    breaks = as.numeric(seq(reference_date, as.Date("2021-01-01"), by = "3 months") - reference_date),
+    labels = format(seq(reference_date, as.Date("2021-01-01"), by = "3 months"), "%b %Y")
+  ) +
+  # scale_x_continuous(
+  #   limits = c(0, max(num_grid(current_date))),  # force axis to start at 0
+  #   breaks = num_grid(current_date)[seq(1, length(current_date), 13)],
+  #   labels = format(current_date[seq(1, length(current_date), 13)], "%b\n%Y"),
+  #   expand = c(0.01,0.1) # This line removes the gap(not really)
+  # ) + #coord_cartesian(ylim = c(0, NA), expand = FALSE)+
   labs(
     x = "Weeks starting in January 2020",
     y = "All-cause excess and COVID-19 deaths in the US"

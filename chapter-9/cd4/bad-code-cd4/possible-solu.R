@@ -52,21 +52,21 @@ face_sparse_wrapper <- function(data, arg, pve = 0.95, ...) {
   )
 }
 
-# ─── STEP 1: Get FPCA scores & components ───────────────
+# ─── Get FPCA scores & components ───────────────
 fpca_res <- face_sparse_wrapper(cd4_tf, arg = -20:40, pve = 0.95)
 fpca_res
-# ─── STEP 2: Reconstruct predicted curves (for plotting) ─
+# ─── Reconstruct predicted curves (for plotting) ─
 cd4_fpca <- tfb_fpc(cd4_tf, method = face_sparse_wrapper, pve = .95,signif = 15)
 cd4_fpca
 print(cd4_fpca, signif = 4)
 
-# ─── STEP 3: K-means on the scores ──────────────────────
+# ───  K-means on the scores ──────────────────────
 set.seed(202200228)
 km_res <- kmeans(fpca_res$scores, centers = 3)
 
-# ─── STEP 4: Reconstruct the *function* for each cluster‐center ─
-mu_grid   <- fpca_res$mu                    # length = 51 (–20:40)
-psi_mat   <- fpca_res$efunctions           # 51 × L (L = 2 here)
+# ─── Reconstruct the function for each cluster‐center ─
+mu_grid   <- fpca_res$mu                   
+psi_mat   <- fpca_res$efunctions           
 #arg_grid  <- seq(-20, 40, by = 1)
 arg_grid <- sort(unique(dat$argvals))
 
@@ -94,10 +94,6 @@ cluster_tbl <- tibble(
 as.matrix(centers_tbl$curve)
 # ─── STEP 5: Plot ───────────────────────────────────────
 tf_plot_clusters_tf(cluster_tbl, centers_tbl) +
-  scale_color_manual(
-    name   = "Cluster",
-    values = pal_ind
-  )+
   #scale_color_brewer("Cluster", palette = "Set1") +
   theme_minimal(base_size = 14) +
   labs(
@@ -107,57 +103,57 @@ tf_plot_clusters_tf(cluster_tbl, centers_tbl) +
   )
 
 
-
-
-tf_plot_clusters_tf <- function(cluster_tbl, centers_tbl) {
-  # pastel for individuals  
-  pal_ind  <- c("1" = "#E69A8DFF",
-                "2" = "#F6D55C",
-                "3" = "#2A9D8F")
-  # dark for centers  
-  pal_cent <- c("1" = "darkred",
-                "2" = "darkorange",
-                "3" = "darkgreen")
-  
-  ggplot() +
-    ## individual subjects in pastel
-    geom_spaghetti(
-      data       = cluster_tbl,
-      aes(y      = curve, colour = cluster, group = id),
-      alpha      = .15, 
-      linewidth  = .7
-    ) +
-    scale_color_manual(
-      name   = "Cluster",
-      values = pal_ind
-    ) +
-    
-    ## cluster centers in dark colors  
-    geom_spaghetti(
-      data      = filter(centers_tbl, cluster == "1"),
-      aes(y     = curve, group = cluster),
-      color     = pal_cent["1"],
-      linewidth = 1.5,
-      show.legend = FALSE
-    ) +
-    geom_spaghetti(
-      data      = filter(centers_tbl, cluster == "2"),
-      aes(y     = curve, group = cluster),
-      color     = pal_cent["2"],
-      linewidth = 1.5,
-      show.legend = FALSE
-    ) +
-    geom_spaghetti(
-      data      = filter(centers_tbl, cluster == "3"),
-      aes(y     = curve, group = cluster),
-      color     = pal_cent["3"],
-      linewidth = 1.5,
-      show.legend = FALSE
-    ) +
-    
-    labs(
-      x = "Time from seroconversion (months)",
-      y = "Log CD4 counts"
-    ) +
-    theme_minimal(base_size = 14)
-}
+# 
+# 
+# tf_plot_clusters_tf <- function(cluster_tbl, centers_tbl) {
+#   # pastel for individuals  
+#   pal_ind  <- c("1" = "#E69A8DFF",
+#                 "2" = "#F6D55C",
+#                 "3" = "#2A9D8F")
+#   # dark for centers  
+#   pal_cent <- c("1" = "darkred",
+#                 "2" = "darkorange",
+#                 "3" = "darkgreen")
+#   
+#   ggplot() +
+#     ## individual subjects in pastel
+#     geom_spaghetti(
+#       data       = cluster_tbl,
+#       aes(y      = curve, colour = cluster, group = id),
+#       alpha      = .15, 
+#       linewidth  = .7
+#     ) +
+#     scale_color_manual(
+#       name   = "Cluster",
+#       values = pal_ind
+#     ) +
+#     
+#     ## cluster centers in dark colors  
+#     geom_spaghetti(
+#       data      = filter(centers_tbl, cluster == "1"),
+#       aes(y     = curve, group = cluster),
+#       color     = pal_cent["1"],
+#       linewidth = 1.5,
+#       show.legend = FALSE
+#     ) +
+#     geom_spaghetti(
+#       data      = filter(centers_tbl, cluster == "2"),
+#       aes(y     = curve, group = cluster),
+#       color     = pal_cent["2"],
+#       linewidth = 1.5,
+#       show.legend = FALSE
+#     ) +
+#     geom_spaghetti(
+#       data      = filter(centers_tbl, cluster == "3"),
+#       aes(y     = curve, group = cluster),
+#       color     = pal_cent["3"],
+#       linewidth = 1.5,
+#       show.legend = FALSE
+#     ) +
+#     
+#     labs(
+#       x = "Time from seroconversion (months)",
+#       y = "Log CD4 counts"
+#     ) +
+#     theme_minimal(base_size = 14)
+# }
