@@ -30,6 +30,8 @@ reference_date <- as.Date("2020-01-01")
 
 # ──helpers───────────────────
 # Force reference to Jan 1, 2020
+num_grid <- function(dates, ref = min(dates)) as.numeric(dates - ref)
+
 num_grid_v2 <- function(dates, ref = as.Date("2020-01-01")) as.numeric(dates - ref)
 tnum <- num_grid_v2(current_date)
 
