@@ -20,7 +20,7 @@ states_cum_tf
 # Manual SVD reconstruction as tfd
 manual_svd <- tfd(WK0, arg = num_grid(current_date), id = new_states, var = "cum_excess")
 
-svd_tfb <- tfb_fpc(manual_svd)
+svd_tfb <- tfb_fpc(states_cum_tf)
 
 
 
@@ -51,9 +51,14 @@ p1 <- ggplot(comp_df) +
                  linewidth = 2, linetype = "dashed", alpha = 0.8) +
   scale_color_manual(values = emph_cols) +
   scale_x_continuous(
-    breaks = num_grid(current_date)[seq(1, length(num_grid(current_date)), 13)],
-    labels = format(current_date[seq(1, length(current_date), 13)], "%b\n%Y")
+    name = "Weeks starting January 2020",
+    breaks = as.numeric(seq(reference_date, as.Date("2021-01-01"), by = "3 months") - reference_date),
+    labels = format(seq(reference_date, as.Date("2021-01-01"), by = "3 months"), "%b %Y")
   ) +
+  # scale_x_continuous(
+  #   breaks = num_grid(current_date)[seq(1, length(num_grid(current_date)), 13)],
+  #   labels = format(current_date[seq(1, length(current_date), 13)], "%b\n%Y")
+  # ) +
   labs(
     title = "Manual SVD  (K=2)",
     x = "Weeks starting January 2020",
@@ -70,9 +75,14 @@ p2 <- ggplot(comp_df) +
                  linewidth = 2, linetype = "dashed", alpha = 0.8) +
   scale_color_manual(values = emph_cols) +
   scale_x_continuous(
-    breaks = num_grid(current_date)[seq(1, length(num_grid(current_date)), 13)],
-    labels = format(current_date[seq(1, length(current_date), 13)], "%b\n%Y")
+    name = "Weeks starting January 2020",
+    breaks = as.numeric(seq(reference_date, as.Date("2021-01-01"), by = "3 months") - reference_date),
+    labels = format(seq(reference_date, as.Date("2021-01-01"), by = "3 months"), "%b %Y")
   ) +
+  # scale_x_continuous(
+  #   breaks = num_grid(current_date)[seq(1, length(num_grid(current_date)), 13)],
+  #   labels = format(current_date[seq(1, length(current_date), 13)], "%b\n%Y")
+  # ) +
   labs(
     title = "tfb_fpc Reconstruction",
     x = "Weeks starting January 2020",
