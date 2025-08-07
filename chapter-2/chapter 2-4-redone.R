@@ -15,6 +15,8 @@ WK0 <- mW_mat + rec
 #Mental note: I dont know exactly what I am doing.I dont know how to apply tfb_fpc here.
 #I am very confused
 #Need help
+
+#Update I fixed.Soory Prof Scheipl, I was making a silly mistake.:)
 states_cum_tf
 
 # Manual SVD reconstruction as tfd
