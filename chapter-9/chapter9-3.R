@@ -73,21 +73,30 @@ gglasagna(
     limits = c(-50, 300),
     name = "EMR"
   ) +
-  guides(color = "none") +  # <--- REMOVE THE SECOND LEGEND
+  #this was the buggy code
+  guides(color = "none") +  
   scale_x_continuous(
-    breaks = function(x) {
-      ref <- as.Date("2020-01-01")
-      qs  <- seq(ref, max(current_date), by = "3 months")
-      as.numeric(qs - ref)
-    },
-    labels = function(x) {
-      ref <- as.Date("2020-01-01")
-      format(ref + x, "%b %Y")
-    },
-    name = "Weeks since Jan 1, 2020"
-  ) +
+    name   = "Weeks starting january 2020",
+    breaks = num_grid(current_date),
+    labels = seq_along(current_date)
+  )+
+  # scale_x_continuous(
+  #   breaks = function(x) {
+  #     ref <- as.Date("2020-01-01")
+  #     qs  <- seq(ref, max(current_date), by = "3 months")
+  #     as.numeric(qs - ref)
+  #   },
+  #   labels = function(x) {
+  #     ref <- as.Date("2020-01-01")
+  #     format(ref + x, "%b %Y")
+  #   },
+  #   name = "Weeks since Jan 1, 2020"
+  # ) +
   labs(
-    title = "Heatmap of 2020 Weekly Excess Mortality\nStates ordered by hierarchical clustering"
+    title = "Heatmap of 2020 Weekly Excess Mortality\nStates ordered by hierarchical clustering",
+    #gglasagna defaults into telling me that is ordered by :row_order
+    #I know it is ;)
+    caption = ""
   ) +
   theme_minimal(base_size = 12) +
   theme(

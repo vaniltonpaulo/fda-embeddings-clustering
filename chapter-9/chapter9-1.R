@@ -28,7 +28,6 @@ current_date  <- COVID19$US_weekly_excess_mort_2020_dates
 Wd     <- COVID19$States_excess_mortality_per_million
 reference_date <- as.Date("2020-01-01")
 
-
 # ──helpers───────────────────
 # Force reference to Jan 1, 2020
 num_grid_v2 <- function(dates, ref = as.Date("2020-01-01")) as.numeric(dates - ref)
