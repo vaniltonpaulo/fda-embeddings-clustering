@@ -1,0 +1,619 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Chapter 1 - Importing and Visualizing Functional Data},
+  pdfauthor={VP},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Chapter 1 - Importing and Visualizing Functional Data}
+\author{VP}
+\date{2025-08-15}
+
+\begin{document}
+\maketitle
+
+\section{COVID-19 US Mortality Data}\label{covid-19-us-mortality-data}
+
+\paragraph{Weekly all-cause mortality
+data}\label{weekly-all-cause-mortality-data}
+
+We assemble exploratory visualizations for all-cause and COVID-19 weekly
+mortality data in the US. The all‑cause mortality data spans 222 weeks,
+from the week ending January 14, 2017 through the week ending April 10,
+2021.The Data is sourced from National Center for Health Statistics.The
+data can be accessed via the REFUND package in R.
+
+The COVID‑19 mortality data consist of the weekly mortality, where
+COVID‑19 is listed as the underlying cause of death. This spans for 68
+weeks, from the week ending January 4, 2020 to the week ending April 17,
+2021, and is sourced from National Center for Health Statistics.The data
+can be accessed via the REFUND package in R.
+
+We aim to apply functional data analysis methods, implemented via the
+tidyfun package, to visualize U.S. mortality trends with a focus on the
+year 2020. The analysis addresses two objectives:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  To visualize all-cause total and excess mortality(mortality in a week
+  in 2020 minus mortality in the coresponding week in 2019)
+\item
+  To visualize the temporal pattern of the total COVID-19 mortality.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ─Packages───────────────────}
+\CommentTok{\# List of required packages}
+\NormalTok{packages }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}
+  \StringTok{"refund"}\NormalTok{,}
+  \StringTok{"tidyverse"}\NormalTok{,}
+  \StringTok{"tidyfun"}
+\NormalTok{)}
+
+\CommentTok{\# Function to install missing packages}
+\NormalTok{install\_if\_missing }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(pkg) \{}
+  \ControlFlowTok{if}\NormalTok{ (}\SpecialCharTok{!}\FunctionTok{requireNamespace}\NormalTok{(pkg, }\AttributeTok{quietly =} \ConstantTok{TRUE}\NormalTok{)) \{}
+    \FunctionTok{install.packages}\NormalTok{(pkg)}
+\NormalTok{  \}}
+\NormalTok{\}}
+
+\CommentTok{\# Install missing packages}
+\FunctionTok{invisible}\NormalTok{(}\FunctionTok{lapply}\NormalTok{(packages, install\_if\_missing))}
+
+
+
+\CommentTok{\#  calling all the packages }
+\FunctionTok{library}\NormalTok{(refund)      }
+\FunctionTok{library}\NormalTok{(tidyverse)   }
+\FunctionTok{library}\NormalTok{(tidyfun)     }
+
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{53615}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ────Overview───────────────────}
+\FunctionTok{data}\NormalTok{(}\StringTok{"COVID19"}\NormalTok{, }\AttributeTok{package =} \StringTok{"refund"}\NormalTok{) }
+\FunctionTok{names}\NormalTok{(COVID19)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1] "US_weekly_mort"                      "US_weekly_mort_dates"               
+##  [3] "US_weekly_mort_CV19"                 "US_weekly_mort_CV19_dates"          
+##  [5] "US_weekly_excess_mort_2020"          "US_weekly_excess_mort_2020_dates"   
+##  [7] "US_states_names"                     "US_states_population"               
+##  [9] "States_excess_mortality"             "States_excess_mortality_per_million"
+## [11] "States_CV19_mortality"               "States_CV19_mortality_per_million"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ─────────────helpers───────────────────}
+\CommentTok{\#Conversion of the dates into  numbers (days since the very first week)}
+\CommentTok{\#because the args of tfd  need numbers, not dates.}
+\NormalTok{num\_grid }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(dates, }\AttributeTok{ref =} \FunctionTok{min}\NormalTok{(dates)) }\FunctionTok{as.numeric}\NormalTok{(dates }\SpecialCharTok{{-}}\NormalTok{ ref)}
+\NormalTok{reference\_date }\OtherTok{\textless{}{-}} \FunctionTok{as.Date}\NormalTok{(}\StringTok{"2020{-}01{-}01"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#Data}
+\NormalTok{counts\_state }\OtherTok{\textless{}{-}}\NormalTok{ COVID19}\SpecialCharTok{$}\NormalTok{US\_weekly\_mort}
+\NormalTok{date\_state }\OtherTok{\textless{}{-}}\NormalTok{ COVID19}\SpecialCharTok{$}\NormalTok{US\_weekly\_mort\_dates}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ───Data Transformation ─────────────}
+\CommentTok{\#Its standard in tidyfun to create a tibble(part of the pipeline)}
+\NormalTok{nat\_weekly }\OtherTok{\textless{}{-}} \FunctionTok{tibble}\NormalTok{(}
+  \CommentTok{\# week{-}start dates}
+  \AttributeTok{date   =}\NormalTok{ date\_state,}
+  \CommentTok{\#the weekly all{-}cause death counts  }
+  \CommentTok{\#Divide by 1000 to indicate numbers in thousands}
+  \AttributeTok{deaths =}\NormalTok{ counts\_state }\SpecialCharTok{/} \DecValTok{1000}       
+\NormalTok{)}
+
+
+\CommentTok{\# Shading rectangles: actual full weeks of 2019 and 2020}
+\CommentTok{\#The red area is 2020 and the blue area is 2019}
+
+\NormalTok{shade }\OtherTok{\textless{}{-}}\NormalTok{ nat\_weekly }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{filter}\NormalTok{(}\FunctionTok{year}\NormalTok{(date) }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\DecValTok{2019}\NormalTok{, }\DecValTok{2020}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{year =} \FunctionTok{year}\NormalTok{(date),}
+    \AttributeTok{day\_num =} \FunctionTok{num\_grid}\NormalTok{(date, }\AttributeTok{ref =} \FunctionTok{min}\NormalTok{(nat\_weekly}\SpecialCharTok{$}\NormalTok{date))}
+\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(year) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{summarise}\NormalTok{(}
+    \CommentTok{\#For each year, get the min and max week{-}index}
+    \AttributeTok{xmin =} \FunctionTok{min}\NormalTok{(day\_num),}
+    \AttributeTok{xmax =} \FunctionTok{max}\NormalTok{(day\_num),}
+    \AttributeTok{.groups =} \StringTok{"drop"}
+\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{band =} \FunctionTok{as.character}\NormalTok{(year),}
+    \AttributeTok{colour =} \FunctionTok{c}\NormalTok{(}\StringTok{"blue"}\NormalTok{, }\StringTok{"red"}\NormalTok{)}
+\NormalTok{  )}
+
+\CommentTok{\# X{-}axis year labels at first week of each year}
+\NormalTok{year\_ticks }\OtherTok{\textless{}{-}}\NormalTok{ nat\_weekly }\SpecialCharTok{\%\textgreater{}\%}
+\CommentTok{\#we  add two new columns}
+  \FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{year =} \FunctionTok{year}\NormalTok{(date),}
+    \AttributeTok{day\_num =} \FunctionTok{num\_grid}\NormalTok{(date)}
+\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(year) }\SpecialCharTok{\%\textgreater{}\%}
+  \CommentTok{\#within each year, we take the row with the smallest date for the plot}
+  \FunctionTok{slice\_min}\NormalTok{(date, }\AttributeTok{n =} \DecValTok{1}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ungroup}\NormalTok{()}
+
+
+
+\CommentTok{\#  Plot weekly all{-}cause US mortality 2017 to 2020}
+\CommentTok{\#. The reason for the gap is because if you run this:}
+\CommentTok{\# print(nat\_weekly \%\textgreater{}\%}
+\CommentTok{\#         filter(year(date) \%in\% c(2019, 2020)),n =104)}
+\CommentTok{\#You will see that there is a week between the last date of 2019 and the first date of 2020}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ─────────────────── Turn into tfd ─────────────}
+\NormalTok{nat\_weekly\_tfd }\OtherTok{\textless{}{-}} \FunctionTok{tfd}\NormalTok{(}
+  \CommentTok{\#We reshape the deaths into a 1{-}row matrix so it’s literally one curve through 2017 to 2020.}
+  \FunctionTok{matrix}\NormalTok{(nat\_weekly}\SpecialCharTok{$}\NormalTok{deaths, }\AttributeTok{nrow =} \DecValTok{1}\NormalTok{),}
+  \AttributeTok{arg =} \FunctionTok{num\_grid}\NormalTok{(nat\_weekly}\SpecialCharTok{$}\NormalTok{date)}
+\NormalTok{)}
+\NormalTok{nat\_weekly\_tfd}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## tfd[1] on (0,1442) based on 207 evaluations each
+## interpolation by tf_approx_linear 
+## [1]: ( 0,61);( 7,59);(14,58); ...
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ─────────────────── Plot ─────────────}
+
+\FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{geom\_rect}\NormalTok{(}
+    \AttributeTok{data =}\NormalTok{ shade,}
+    \FunctionTok{aes}\NormalTok{(}\AttributeTok{xmin =}\NormalTok{ xmin, }\AttributeTok{xmax =}\NormalTok{ xmax, }\AttributeTok{ymin =} \SpecialCharTok{{-}}\ConstantTok{Inf}\NormalTok{, }\AttributeTok{ymax =} \ConstantTok{Inf}\NormalTok{, }\AttributeTok{fill =}\NormalTok{ colour),}
+    \AttributeTok{inherit.aes =} \ConstantTok{FALSE}\NormalTok{, }\AttributeTok{alpha =} \FloatTok{0.15}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{scale\_fill\_identity}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{geom\_meatballs}\NormalTok{(}
+    \AttributeTok{data =} \FunctionTok{tibble}\NormalTok{(}\AttributeTok{y =}\NormalTok{ nat\_weekly\_tfd),}
+    \FunctionTok{aes}\NormalTok{(}\AttributeTok{y =}\NormalTok{ y),}
+    \AttributeTok{colour =} \StringTok{"steelblue"}\NormalTok{, }\AttributeTok{size =} \DecValTok{2}\NormalTok{, }\AttributeTok{alpha =} \FloatTok{0.6}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{scale\_x\_continuous}\NormalTok{(}
+    \AttributeTok{breaks =}\NormalTok{ year\_ticks}\SpecialCharTok{$}\NormalTok{day\_num,}
+    \AttributeTok{labels =}\NormalTok{ year\_ticks}\SpecialCharTok{$}\NormalTok{year,}
+    \AttributeTok{expand =} \FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{)}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{x =} \StringTok{"Weeks starting in January 2017"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"Weekly all{-}cause deaths in the US (thousands)"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_classic}\NormalTok{() }
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{chapter-1_files/figure-latex/unnamed-chunk-2-1.pdf}}
+
+\paragraph{Weekly US COVID-19 mortality
+data}\label{weekly-us-covid-19-mortality-data}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ───Data ──────────────────}
+\NormalTok{cv19\_deaths     }\OtherTok{\textless{}{-}}\NormalTok{ COVID19}\SpecialCharTok{$}\NormalTok{US\_weekly\_mort\_CV19}
+\NormalTok{week\_diff    }\OtherTok{\textless{}{-}}\NormalTok{ COVID19}\SpecialCharTok{$}\NormalTok{US\_weekly\_excess\_mort\_2020}
+\NormalTok{current\_date }\OtherTok{\textless{}{-}}\NormalTok{ COVID19}\SpecialCharTok{$}\NormalTok{US\_weekly\_excess\_mort\_2020\_dates}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ─── Turn into tfd ──────────────────}
+
+\NormalTok{death\_tf }\OtherTok{\textless{}{-}} \FunctionTok{tfd}\NormalTok{(}
+  \FunctionTok{rbind}\NormalTok{(week\_diff, cv19\_deaths),}
+  \AttributeTok{arg =} \FunctionTok{num\_grid}\NormalTok{(current\_date)}
+\NormalTok{)}
+\NormalTok{death\_tf}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## tfd[2] on (0,357) based on 52 evaluations each
+## interpolation by tf_approx_linear 
+## week_diff: ( 0,1698);( 7,2222);(14,1011); ...
+## cv19_deaths: ( 0,   0);( 7,   0);(14,   3); ...
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ── Prepare data for plotting ──────────────────}
+
+\NormalTok{excess\_tibble }\OtherTok{\textless{}{-}} \FunctionTok{tibble}\NormalTok{(}
+  \AttributeTok{death\_type =} \FunctionTok{c}\NormalTok{(}\StringTok{"All{-}cause excess"}\NormalTok{, }\StringTok{"COVID{-}19"}\NormalTok{),}
+  \AttributeTok{curve      =}\NormalTok{ death\_tf}
+\NormalTok{)}
+\NormalTok{excess\_tibble}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 2 x 2
+##   death_type                                         curve
+##   <chr>                                          <tfd_reg>
+## 1 All-cause excess [1]: ( 0,1698);( 7,2222);(14,1011); ...
+## 2 COVID-19         [2]: ( 0,   0);( 7,   0);(14,   3); ...
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ──────────────── Plot ────────────────}
+\DocumentationTok{\#\#Plot excess weekly US all{-}cause excess mortality and COVID{-}19 mortality in 2019}
+
+\FunctionTok{ggplot}\NormalTok{(excess\_tibble, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{y =}\NormalTok{ curve, }\AttributeTok{colour =}\NormalTok{ death\_type)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_meatballs}\NormalTok{(}\AttributeTok{size =} \DecValTok{3}\NormalTok{, }\AttributeTok{alpha =} \FloatTok{0.6}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{scale\_colour\_manual}\NormalTok{(}\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"blue"}\NormalTok{, }\StringTok{"red"}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{scale\_x\_continuous}\NormalTok{(}
+    \AttributeTok{name =} \StringTok{"Weeks starting January 2020"}\NormalTok{,}
+    \AttributeTok{breaks =} \FunctionTok{as.numeric}\NormalTok{(}\FunctionTok{seq}\NormalTok{(reference\_date, }\FunctionTok{as.Date}\NormalTok{(}\StringTok{"2021{-}01{-}01"}\NormalTok{), }\AttributeTok{by =} \StringTok{"3 months"}\NormalTok{) }\SpecialCharTok{{-}}\NormalTok{ reference\_date),}
+    \AttributeTok{labels =} \FunctionTok{format}\NormalTok{(}\FunctionTok{seq}\NormalTok{(reference\_date, }\FunctionTok{as.Date}\NormalTok{(}\StringTok{"2021{-}01{-}01"}\NormalTok{), }\AttributeTok{by =} \StringTok{"3 months"}\NormalTok{), }\StringTok{"\%b \%Y"}\NormalTok{)}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \CommentTok{\# scale\_x\_continuous(}
+  \CommentTok{\#   limits = c(0, max(num\_grid(current\_date))),  \# force axis to start at 0}
+  \CommentTok{\#   breaks = num\_grid(current\_date)[seq(1, length(current\_date), 13)],}
+  \CommentTok{\#   labels = format(current\_date[seq(1, length(current\_date), 13)], "\%b\textbackslash{}n\%Y"),}
+  \CommentTok{\#   expand = c(0.01,0.1) \# This line removes the gap(not really)}
+  \CommentTok{\# ) + \#coord\_cartesian(ylim = c(0, NA), expand = FALSE)+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{x =} \StringTok{"Weeks starting in January 2020"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"All{-}cause excess and COVID{-}19 deaths in the US"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_classic}\NormalTok{() }
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{chapter-1_files/figure-latex/unnamed-chunk-6-1.pdf}}
+
+\paragraph{Plot of all-cause cumulative excess
+data}\label{plot-of-all-cause-cumulative-excess-data}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ── Data ───────────────────}
+\NormalTok{new\_states        }\OtherTok{\textless{}{-}}\NormalTok{ COVID19}\SpecialCharTok{$}\NormalTok{US\_states\_names}
+\NormalTok{state\_population    }\OtherTok{\textless{}{-}}\NormalTok{ COVID19}\SpecialCharTok{$}\NormalTok{US\_states\_population}
+\NormalTok{states\_excess }\OtherTok{\textless{}{-}}\NormalTok{ COVID19}\SpecialCharTok{$}\NormalTok{States\_excess\_mortality}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ── Data Transformation ───────────────────}
+
+\CommentTok{\#Normalize to rate per 1 million people}
+\NormalTok{rate\_mat }\OtherTok{\textless{}{-}} \FunctionTok{sweep}\NormalTok{(states\_excess, }\DecValTok{1}\NormalTok{, state\_population }\SpecialCharTok{/} \FloatTok{1e6}\NormalTok{, }\StringTok{"/"}\NormalTok{)}
+
+\CommentTok{\#row by row , and replace each row with its cumulative sum.}
+\CommentTok{\#We transpose it back so that rows = states, columns = weeks again.}
+\NormalTok{cum\_mat  }\OtherTok{\textless{}{-}} \FunctionTok{t}\NormalTok{(}\FunctionTok{apply}\NormalTok{(rate\_mat, }\DecValTok{1}\NormalTok{, cumsum))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ────────────── Turn into tfd ──────────────────}
+
+\CommentTok{\#So now we end up with a tfd object where each row(curve represents a state)}
+\NormalTok{state\_tf }\OtherTok{\textless{}{-}} \FunctionTok{tfd}\NormalTok{(cum\_mat, }\AttributeTok{arg =} \FunctionTok{num\_grid}\NormalTok{(current\_date))}
+
+\NormalTok{state\_tf}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## tfd[52] on (0,357) based on 52 evaluations each
+## interpolation by tf_approx_linear 
+## [1]: ( 0, 0.8);( 7, 8.3);(14,-6.9); ...
+## [2]: ( 0,  -5);( 7,  19);(14,  26); ...
+## [3]: ( 0,  -7);( 7,  -1);(14,   5); ...
+## [4]: ( 0,  -7);( 7,  21);(14,  20); ...
+## [5]: ( 0,   5);( 7,   7);(14,  12); ...
+##     [....]   (47 not shown)
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ── Prepare data for plotting ──────────────────}
+
+\NormalTok{state\_df }\OtherTok{\textless{}{-}} \FunctionTok{tibble}\NormalTok{(}
+  \AttributeTok{state =}\NormalTok{ new\_states,}
+  \AttributeTok{curve =}\NormalTok{ state\_tf}
+\NormalTok{)}
+\NormalTok{state\_df}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 52 x 2
+##    state                                                   curve
+##    <chr>                                               <tfd_reg>
+##  1 Alabama               [1]: ( 0, 0.8);( 7, 8.3);(14,-6.9); ...
+##  2 Alaska                [2]: ( 0,  -5);( 7,  19);(14,  26); ...
+##  3 Arizona               [3]: ( 0,  -7);( 7,  -1);(14,   5); ...
+##  4 Arkansas              [4]: ( 0,  -7);( 7,  21);(14,  20); ...
+##  5 California            [5]: ( 0,   5);( 7,   7);(14,  12); ...
+##  6 Colorado              [6]: ( 0,   3);( 7,  10);(14,  14); ...
+##  7 Connecticut           [7]: ( 0, 0.3);( 7, 1.1);(14, 4.2); ...
+##  8 Delaware              [8]: ( 0,  14);( 7,  13);(14,   4); ...
+##  9 District of Columbia  [9]: ( 0,   3);( 7,  11);(14,  60); ...
+## 10 Florida              [10]: ( 0,   6);( 7,  15);(14,  24); ...
+## # i 42 more rows
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ── Plot ────────────────}
+
+
+\NormalTok{emph\_states }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\StringTok{"New Jersey"}\NormalTok{, }\StringTok{"Louisiana"}\NormalTok{, }\StringTok{"California"}\NormalTok{, }\StringTok{"Maryland"}\NormalTok{, }\StringTok{"Texas"}\NormalTok{)}
+\NormalTok{emph\_cols   }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\StringTok{"darkseagreen3"}\NormalTok{, }\StringTok{"red"}\NormalTok{, }\StringTok{"plum3"}\NormalTok{, }\StringTok{"deepskyblue4"}\NormalTok{, }\StringTok{"salmon"}\NormalTok{)}
+
+\FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{geom\_spaghetti}\NormalTok{(}
+    \AttributeTok{data   =}\NormalTok{ state\_df,}
+    \FunctionTok{aes}\NormalTok{(}\AttributeTok{y =}\NormalTok{ curve),}
+    \AttributeTok{colour =} \StringTok{"grey20"}\NormalTok{, }\AttributeTok{alpha =}\NormalTok{ .}\DecValTok{15}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{geom\_spaghetti}\NormalTok{(}
+    \AttributeTok{data   =} \FunctionTok{filter}\NormalTok{(state\_df, state }\SpecialCharTok{\%in\%}\NormalTok{ emph\_states),}
+    \FunctionTok{aes}\NormalTok{(}\AttributeTok{y =}\NormalTok{ curve, }\AttributeTok{colour =}\NormalTok{ state), }\AttributeTok{alpha =} \DecValTok{5}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{scale\_colour\_manual}\NormalTok{(}\AttributeTok{values =} \FunctionTok{setNames}\NormalTok{(emph\_cols, emph\_states)) }\SpecialCharTok{+}
+  \FunctionTok{scale\_x\_continuous}\NormalTok{(}
+    \AttributeTok{name =} \StringTok{"Weeks starting January 2020"}\NormalTok{,}
+    \AttributeTok{breaks =} \FunctionTok{as.numeric}\NormalTok{(}\FunctionTok{seq}\NormalTok{(reference\_date, }\FunctionTok{as.Date}\NormalTok{(}\StringTok{"2021{-}01{-}01"}\NormalTok{), }\AttributeTok{by =} \StringTok{"3 months"}\NormalTok{) }\SpecialCharTok{{-}}\NormalTok{ reference\_date),}
+    \AttributeTok{labels =} \FunctionTok{format}\NormalTok{(}\FunctionTok{seq}\NormalTok{(reference\_date, }\FunctionTok{as.Date}\NormalTok{(}\StringTok{"2021{-}01{-}01"}\NormalTok{), }\AttributeTok{by =} \StringTok{"3 months"}\NormalTok{), }\StringTok{"\%b \%Y"}\NormalTok{)}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \CommentTok{\# scale\_x\_continuous(}
+  \CommentTok{\#   breaks = num\_grid(current\_date)[seq(1, length(current\_date), 13)],}
+  \CommentTok{\#   labels = format(current\_date[seq(1, length(current\_date), 13)], "\%b\textbackslash{}n\%Y"),}
+  \CommentTok{\#   expand = c(0, 0)}
+  \CommentTok{\# ) +}
+  \FunctionTok{coord\_cartesian}\NormalTok{(}\AttributeTok{ylim =} \FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{50}\NormalTok{, }\DecValTok{2500}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{x =} \StringTok{"Weeks starting January 2020"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"US states cumulative excess deaths per million"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_classic}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.position =} \StringTok{"right"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{chapter-1_files/figure-latex/unnamed-chunk-11-1.pdf}}
+
+\paragraph{Plot of COVID-19 cumulative
+data}\label{plot-of-covid-19-cumulative-data}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ── Data ────────────}
+\NormalTok{states\_CV19\_mort }\OtherTok{\textless{}{-}}\NormalTok{ COVID19}\SpecialCharTok{$}\NormalTok{States\_CV19\_mortality}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ── Data Transformation ───────────────────}
+\NormalTok{per\_mil\_mat  }\OtherTok{\textless{}{-}} \FunctionTok{sweep}\NormalTok{(states\_CV19\_mort, }\DecValTok{1}\NormalTok{, state\_population }\SpecialCharTok{/} \FloatTok{1e6}\NormalTok{, }\StringTok{"/"}\NormalTok{)}
+\NormalTok{cum\_covid    }\OtherTok{\textless{}{-}} \FunctionTok{t}\NormalTok{(}\FunctionTok{apply}\NormalTok{(per\_mil\_mat, }\DecValTok{1}\NormalTok{, }\ControlFlowTok{function}\NormalTok{(x) }\FunctionTok{cumsum}\NormalTok{(}\FunctionTok{replace\_na}\NormalTok{(x, }\DecValTok{0}\NormalTok{))))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ────────────── Turn into tfd ──────────────────}
+
+\NormalTok{covid\_tf }\OtherTok{\textless{}{-}} \FunctionTok{tfd}\NormalTok{(cum\_covid, }\AttributeTok{arg =} \FunctionTok{num\_grid}\NormalTok{(current\_date))}
+\NormalTok{covid\_tf}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## tfd[52] on (0,357) based on 52 evaluations each
+## interpolation by tf_approx_linear 
+## [1]: ( 0,0);( 7,0);(14,0); ...
+## [2]: ( 0,0);( 7,0);(14,0); ...
+## [3]: ( 0,0);( 7,0);(14,0); ...
+## [4]: ( 0,0);( 7,0);(14,0); ...
+## [5]: ( 0,0);( 7,0);(14,0); ...
+##     [....]   (47 not shown)
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ── Data Transformation ───────────────────}
+\NormalTok{covid\_df }\OtherTok{\textless{}{-}} \FunctionTok{tibble}\NormalTok{(}
+  \AttributeTok{state =}\NormalTok{ new\_states,}
+  \AttributeTok{curve =}\NormalTok{ covid\_tf}
+\NormalTok{)}
+\NormalTok{covid\_df}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 52 x 2
+##    state                                          curve
+##    <chr>                                      <tfd_reg>
+##  1 Alabama               [1]: ( 0,0);( 7,0);(14,0); ...
+##  2 Alaska                [2]: ( 0,0);( 7,0);(14,0); ...
+##  3 Arizona               [3]: ( 0,0);( 7,0);(14,0); ...
+##  4 Arkansas              [4]: ( 0,0);( 7,0);(14,0); ...
+##  5 California            [5]: ( 0,0);( 7,0);(14,0); ...
+##  6 Colorado              [6]: ( 0,0);( 7,0);(14,0); ...
+##  7 Connecticut           [7]: ( 0,0);( 7,0);(14,0); ...
+##  8 Delaware              [8]: ( 0,0);( 7,0);(14,0); ...
+##  9 District of Columbia  [9]: ( 0,0);( 7,0);(14,0); ...
+## 10 Florida              [10]: ( 0,0);( 7,0);(14,0); ...
+## # i 42 more rows
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ──────────────── Plot ────────────────}
+\CommentTok{\#Plot of COVID{-}19 cumulative data}
+
+\FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{geom\_spaghetti}\NormalTok{(}
+    \AttributeTok{data   =}\NormalTok{ covid\_df,}
+    \FunctionTok{aes}\NormalTok{(}\AttributeTok{y =}\NormalTok{ curve),}
+    \AttributeTok{colour =} \StringTok{"black"}\NormalTok{, }\AttributeTok{alpha =} \FloatTok{0.1}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \CommentTok{\# highlighted states}
+  \FunctionTok{geom\_spaghetti}\NormalTok{(}
+    \AttributeTok{data   =} \FunctionTok{filter}\NormalTok{(covid\_df, state }\SpecialCharTok{\%in\%}\NormalTok{ emph\_states),}
+    \FunctionTok{aes}\NormalTok{(}\AttributeTok{y =}\NormalTok{ curve, }\AttributeTok{colour =}\NormalTok{ state), }\AttributeTok{alpha =} \DecValTok{2}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{scale\_colour\_manual}\NormalTok{(}\AttributeTok{values =} \FunctionTok{setNames}\NormalTok{(emph\_cols, emph\_states)) }\SpecialCharTok{+}
+  \FunctionTok{scale\_x\_continuous}\NormalTok{(}
+    \AttributeTok{name =} \StringTok{"Weeks starting January 2020"}\NormalTok{,}
+    \AttributeTok{breaks =} \FunctionTok{as.numeric}\NormalTok{(}\FunctionTok{seq}\NormalTok{(reference\_date, }\FunctionTok{as.Date}\NormalTok{(}\StringTok{"2021{-}01{-}01"}\NormalTok{), }\AttributeTok{by =} \StringTok{"3 months"}\NormalTok{) }\SpecialCharTok{{-}}\NormalTok{ reference\_date),}
+    \AttributeTok{labels =} \FunctionTok{format}\NormalTok{(}\FunctionTok{seq}\NormalTok{(reference\_date, }\FunctionTok{as.Date}\NormalTok{(}\StringTok{"2021{-}01{-}01"}\NormalTok{), }\AttributeTok{by =} \StringTok{"3 months"}\NormalTok{), }\StringTok{"\%b \%Y"}\NormalTok{)}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \CommentTok{\# scale\_x\_continuous(}
+  \CommentTok{\#   breaks = num\_grid(current\_date)[seq(1, length(current\_date), 13)],}
+  \CommentTok{\#   labels = format(current\_date[seq(1, length(current\_date), 13)], "\%b\textbackslash{}n\%Y"),}
+  \CommentTok{\#   expand = c(0, 0)}
+  \CommentTok{\# ) +}
+  \FunctionTok{coord\_cartesian}\NormalTok{(}\AttributeTok{ylim =} \FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\ConstantTok{NA}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{x   =} \StringTok{"Weeks starting January 2020"}\NormalTok{,}
+    \AttributeTok{y   =} \StringTok{"Cumulative COVID{-}19 deaths per million (US states)"}\NormalTok{,}
+    \AttributeTok{col =} \ConstantTok{NULL}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_classic}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.position =} \StringTok{"right"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{chapter-1_files/figure-latex/unnamed-chunk-16-1.pdf}}
+
+\end{document}

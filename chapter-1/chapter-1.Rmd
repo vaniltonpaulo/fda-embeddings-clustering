@@ -1,0 +1,393 @@
+---
+title: "Chapter 1 - Importing and Visualizing Functional Data"
+author: "Vanilton Paulo"
+date: "2025-08-15"
+output:
+  html_document: default
+---
+
+# COVID-19 US Mortality Data
+
+#### Weekly all-cause mortality data
+
+We assemble exploratory visualizations for all-cause and COVID-19 weekly mortality data in the US. The all‑cause mortality data spans 222 weeks, from the week ending 14 January 2017 through the week ending 10 April 2021.The Data is sourced from National Center for Health Statistics.The data can be accessed via the REFUND package in R.
+
+The COVID‑19 mortality data consist of the weekly mortality, where COVID‑19 is listed as the underlying cause of death. This spans for 68 weeks, from the week ending 4 of January 2020 to the week ending 17 of April 2021, and is sourced from National Center for Health Statistics.The data can be accessed via the REFUND package in R.
+
+We aim to apply functional data analysis methods, implemented via the tidyfun package, to visualize U.S. mortality trends with a focus on the year 2020. The analysis addresses two objectives:
+
+1.  To visualize all-cause total and excess mortality(mortality in a week in 2020 minus mortality in the coresponding week in 2019)
+
+2.  To visualize the temporal pattern of the total COVID-19 mortality.
+
+```{r setup,echo=TRUE,message=FALSE}
+# ─Packages───────────────────
+# List of required packages
+packages <- c(
+  "refund",
+  "tidyverse",
+  "tidyfun"
+)
+
+# Install missing packages
+install_if_missing <- function(pkg) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    install.packages(pkg)
+  }
+}
+
+# Install missing packages
+invisible(lapply(packages, install_if_missing))
+
+
+
+#Calling all the packages 
+library(refund)      
+library(tidyverse)   
+library(tidyfun)     
+
+#For reproducible results
+set.seed(53615)
+```
+
+```{r load-data, echo=TRUE, results='hide'}
+# ────Overview───────────────────
+data("COVID19", package = "refund") 
+names(COVID19)
+##  [1] "US_weekly_mort"                      "US_weekly_mort_dates"               
+##  [3] "US_weekly_mort_CV19"                 "US_weekly_mort_CV19_dates"          
+##  [5] "US_weekly_excess_mort_2020"          "US_weekly_excess_mort_2020_dates"   
+##  [7] "US_states_names"                     "US_states_population"               
+##  [9] "States_excess_mortality"             "States_excess_mortality_per_million"
+## [11] "States_CV19_mortality"               "States_CV19_mortality_per_million"
+```
+
+```{r helpers,echo=TRUE}
+# ─────────────helpers───────────────────
+#Conversion of the dates into numbers 
+#Because the args of tfd need numbers and  not dates.
+num_grid <- function(dates, ref = min(dates)) as.numeric(dates - ref)
+reference_date <- as.Date("2020-01-01")
+```
+
+#### Weekly all-cause mortality in the US
+
+```{r data, include=TRUE}
+#weekly all-cause excess mortality between 2017 to end of 2020 
+counts_state <- COVID19$US_weekly_mort
+date_state <- COVID19$US_weekly_mort_dates
+```
+
+Visualization of COVID-19 and all-cause mortality
+
+```{r data-transformation, include=TRUE}
+# ───Data Transformation ─────────────
+#Its standard pratice  in tidyfun to create a tibble
+nat_weekly <- tibble(
+  # week-start dates
+  date = date_state,
+  #the weekly all-cause death counts  
+  #Divide by 1000 to indicate numbers in thousands
+  deaths = counts_state / 1000       
+)
+
+
+# Shading rectangles: actual full weeks of 2019 and 2020
+#The red area is 2020 and the blue area is 2019
+shade <- nat_weekly %>%
+  filter(year(date) %in% c(2019, 2020)) %>%
+  mutate(
+    year = year(date),
+    day_num = num_grid(date, ref = min(nat_weekly$date))
+  ) %>%
+  group_by(year) %>%
+  summarise(
+    #For each year, get the min and max week-index
+    xmin = min(day_num),
+    xmax = max(day_num),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    band = as.character(year),
+    colour = c("blue", "red")
+  )
+
+#x-axis year labels at first week of each year
+year_ticks <- nat_weekly %>%
+#we  add two new columns
+  mutate(
+    year = year(date),
+    day_num = num_grid(date)
+  ) %>%
+  group_by(year) %>%
+  #within each year, we take the row with the smallest date for the plot
+  slice_min(date, n = 1) %>%
+  ungroup()
+
+
+#checks:
+#  Plot weekly all-cause US mortality 2017 to 2020
+#. The reason for the gap is because if you run this:
+# print(nat_weekly %>%
+#         filter(year(date) %in% c(2019, 2020)),n =104)
+#You will see that there is a week between the last date of 2019 and the first date of 2020
+
+# ─────────────────── Turn into tfd ─────────────
+nat_weekly_tfd <- tfd(
+  #We reshape the deaths into a 1-row matrix so it’s  one curve through 2017 to 2020.
+  matrix(nat_weekly$deaths, nrow = 1),
+  arg = num_grid(nat_weekly$date)
+)
+# tfd[1] on (0,1442) based on 207 evaluations each
+# interpolation by tf_approx_linear 
+# [1]: ( 0,61);( 7,59);(14,58); ..
+
+
+# ─────────────────── Plot ─────────────
+
+ggplot() +
+  geom_rect(
+    data = shade,
+    aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf, fill = colour),
+    inherit.aes = FALSE, alpha = 0.15
+  ) +
+  scale_fill_identity() +
+  geom_meatballs(
+    data = tibble(y = nat_weekly_tfd),
+    aes(y = y),
+    colour = "steelblue", size = 2, alpha = 0.6
+  ) +
+  scale_x_continuous(
+    breaks = year_ticks$day_num,
+    labels = year_ticks$year,
+    expand = c(0, 0)
+  ) +
+  labs(
+    x = "Weeks starting in January 2017",
+    y = "Weekly all-cause deaths in the US (thousands)"
+  ) +
+  theme_classic() 
+```
+
+FIGURE 1.1: The weekly death counts in the United States from 14 of January 2017 to 26 of December 2020. Each point corresponds to a single week, with deaths reported in thousands. For instance, in the week of 5 May 2018 , there were 53,874 deaths nationwide.
+
+#### Weekly US COVID-19 mortality data
+
+```{r load-data-weeklycv19, include=TRUE}
+# ───Data ──────────────────
+#Covid-19 associated deaths in the US
+cv19_deaths <- COVID19$US_weekly_mort_CV19
+week_diff <- COVID19$US_weekly_excess_mort_2020
+current_date <- COVID19$US_weekly_excess_mort_2020_dates
+
+```
+
+```{r data-transformation-weeklycv19,  echo=TRUE}
+# ─── Turn into tfd ──────────────────
+
+death_tf <- tfd(
+  rbind(week_diff, cv19_deaths),
+  arg = num_grid(current_date)
+)
+# tfd[2] on (0,357) based on 52 evaluations each
+# interpolation by tf_approx_linear 
+# week_diff: ( 0,1698);( 7,2222);(14,1011); ...
+# cv19_deaths: ( 0,   0);( 7,   0);(14,   3); ...
+
+# ── Prepare data for plotting ──────────────────
+
+excess_tibble <- tibble(
+  death_type = c("All-cause excess", "COVID-19"),
+  curve      = death_tf
+)
+# A tibble: 2 × 2
+#   death_type                                         curve
+#   <chr>                                          <tfd_reg>
+# 1 All-cause excess [1]: ( 0,1698);( 7,2222);(14,1011); ...
+# 2 COVID-19         [2]: ( 0,   0);( 7,   0);(14,   3); ...
+
+
+# ──────────────── Plot ────────────────
+ggplot(excess_tibble, aes(y = curve, colour = death_type)) +
+  geom_meatballs(size = 3, alpha = 0.6) +
+  scale_colour_manual(values = c("blue", "red")) +
+  scale_x_continuous(
+    name = "Weeks starting January 2020",
+    breaks = as.numeric(seq(reference_date, as.Date("2021-01-01"), by = "3 months") - reference_date),
+    labels = format(seq(reference_date, as.Date("2021-01-01"), by = "3 months"), "%b %Y")
+  ) +
+  labs(
+    x = "Weeks starting in January 2020",
+    y = "All-cause excess and COVID-19 deaths in the US"
+  ) +
+  theme_classic() 
+```
+
+FIGURE 1.2: The total weekly U.S. mortality caused by COVID-19 alongside estimated excess deaths.The blue points represent excess mortality, calculated as the difference between the total deaths in a given week of 2020 and the corresponding week in 2019. The red points indicate the number of deaths each week directly caused by COVID-19.
+
+#### Plot of all-cause cumulative excess data
+Plot the all-cause US excess mortality data for year 2020.
+
+```{r load-data-all-cause, include=TRUE}
+# ── Data ───────────────────
+new_states        <- COVID19$US_states_names
+state_population    <- COVID19$US_states_population
+states_excess <- COVID19$States_excess_mortality
+```
+
+```{r data-transformation-all-cause, include=TRUE}
+# ── Data Transformation ───────────────────
+
+#Normalize to rate per 1 million people
+rate_mat <- sweep(states_excess, 1, state_population / 1e6, "/")
+
+#row by row , and replace each row with its cumulative sum.
+#We transpose it back so that rows = states, columns = weeks again.
+cum_mat  <- t(apply(rate_mat, 1, cumsum))
+
+# ────────────── Turn into tfd ──────────────────
+
+#So now we end up with a tfd object where each row (each curve represents a state)
+state_tf <- tfd(cum_mat, arg = num_grid(current_date))
+
+# tfd[52] on (0,357) based on 52 evaluations each
+# interpolation by tf_approx_linear 
+# [1]: ( 0, 0.8);( 7, 8.3);(14,-6.9); ...
+# [2]: ( 0,  -5);( 7,  19);(14,  26); ...
+# [3]: ( 0,  -7);( 7,  -1);(14,   5); ...
+# [4]: ( 0,  -7);( 7,  21);(14,  20); ...
+# [5]: ( 0,   5);( 7,   7);(14,  12); ...
+#     [....]   (47 not shown)
+
+
+# ── Prepare data for plotting ──────────────────
+
+state_df <- tibble(
+  state = new_states,
+  curve = state_tf
+)
+
+# A tibble: 52 × 2
+#    state                                                   curve
+#    <chr>                                               <tfd_reg>
+#  1 Alabama               [1]: ( 0, 0.8);( 7, 8.3);(14,-6.9); ...
+#  2 Alaska                [2]: ( 0,  -5);( 7,  19);(14,  26); ...
+#  3 Arizona               [3]: ( 0,  -7);( 7,  -1);(14,   5); ...
+#  4 Arkansas              [4]: ( 0,  -7);( 7,  21);(14,  20); ...
+#  5 California            [5]: ( 0,   5);( 7,   7);(14,  12); ...
+#  6 Colorado              [6]: ( 0,   3);( 7,  10);(14,  14); ...
+#  7 Connecticut           [7]: ( 0, 0.3);( 7, 1.1);(14, 4.2); ...
+#  8 Delaware              [8]: ( 0,  14);( 7,  13);(14,   4); ...
+#  9 District of Columbia  [9]: ( 0,   3);( 7,  11);(14,  60); ...
+# 10 Florida              [10]: ( 0,   6);( 7,  15);(14,  24); ...
+# ℹ 42 more rows
+
+# ── Plot ────────────────
+
+
+emph_states <- c("New Jersey", "Louisiana", "California", "Maryland", "Texas")
+emph_cols   <- c("darkseagreen3", "red", "plum3", "deepskyblue4", "salmon")
+
+ggplot() +
+  geom_spaghetti(
+    data   = state_df,
+    aes(y = curve),
+    colour = "grey20", alpha = .15
+  ) +
+  geom_spaghetti(
+    data   = filter(state_df, state %in% emph_states),
+    aes(y = curve, colour = state), alpha = 5
+  ) +
+  scale_colour_manual(values = setNames(emph_cols, emph_states)) +
+  scale_x_continuous(
+    name = "Weeks starting January 2020",
+    breaks = as.numeric(seq(reference_date, as.Date("2021-01-01"), by = "3 months") - reference_date),
+    labels = format(seq(reference_date, as.Date("2021-01-01"), by = "3 months"), "%b %Y")
+  ) +
+  coord_cartesian(ylim = c(-50, 2500)) +
+  labs(
+    x = "Weeks starting January 2020",
+    y = "US states cumulative excess deaths per million"
+  ) +
+  theme_classic() +
+  theme(legend.position = "right")
+```
+
+FIGURE 1.3: Each U.S. state,the lines track the cumulative weekly all-cause excess mortality per million for each U.S. state. Five states receive special focus and are distinguished by color: New Jersey (green), Louisiana (red), California (plum),Maryland (blue) and Texas (salmon).All remaining states are in grey including Puerto Rico and District of Colombia.
+
+#### Plot of COVID-19 cumulative data
+
+```{r load-data-cum, include=TRUE}
+# ── Data ────────────
+states_CV19_mort <- COVID19$States_CV19_mortality
+
+```
+
+```{r data-transformation-cum, include=TRUE}
+# ── Data Transformation ───────────────────
+per_mil_mat  <- sweep(states_CV19_mort, 1, state_population / 1e6, "/")
+cum_covid    <- t(apply(per_mil_mat, 1, function(x) cumsum(replace_na(x, 0))))
+
+# ────────────── Turn into tfd ──────────────────
+
+covid_tf <- tfd(cum_covid, arg = num_grid(current_date))
+# tfd[52] on (0,357) based on 52 evaluations each
+# interpolation by tf_approx_linear 
+# [1]: ( 0,0);( 7,0);(14,0); ...
+# [2]: ( 0,0);( 7,0);(14,0); ...
+# [3]: ( 0,0);( 7,0);(14,0); ...
+# [4]: ( 0,0);( 7,0);(14,0); ...
+# [5]: ( 0,0);( 7,0);(14,0); ...
+#     [....]   (47 not shown)
+
+# ── Data Transformation ───────────────────
+covid_df <- tibble(
+  state = new_states,
+  curve = covid_tf
+)
+# A tibble: 52 × 2
+#    state                                          curve
+#    <chr>                                      <tfd_reg>
+#  1 Alabama               [1]: ( 0,0);( 7,0);(14,0); ...
+#  2 Alaska                [2]: ( 0,0);( 7,0);(14,0); ...
+#  3 Arizona               [3]: ( 0,0);( 7,0);(14,0); ...
+#  4 Arkansas              [4]: ( 0,0);( 7,0);(14,0); ...
+#  5 California            [5]: ( 0,0);( 7,0);(14,0); ...
+#  6 Colorado              [6]: ( 0,0);( 7,0);(14,0); ...
+#  7 Connecticut           [7]: ( 0,0);( 7,0);(14,0); ...
+#  8 Delaware              [8]: ( 0,0);( 7,0);(14,0); ...
+#  9 District of Columbia  [9]: ( 0,0);( 7,0);(14,0); ...
+# 10 Florida              [10]: ( 0,0);( 7,0);(14,0); ...
+# ℹ 42 more rows
+
+# ──────────────── Plot ────────────────
+#Plot of COVID-19 cumulative data
+
+ggplot() +
+  geom_spaghetti(
+    data   = covid_df,
+    aes(y = curve),
+    colour = "black", alpha = 0.1
+  ) +
+  # highlighted states
+  geom_spaghetti(
+    data   = filter(covid_df, state %in% emph_states),
+    aes(y = curve, colour = state), alpha = 2
+  ) +
+  scale_colour_manual(values = setNames(emph_cols, emph_states)) +
+  scale_x_continuous(
+    name = "Weeks starting January 2020",
+    breaks = as.numeric(seq(reference_date, as.Date("2021-01-01"), by = "3 months") - reference_date),
+    labels = format(seq(reference_date, as.Date("2021-01-01"), by = "3 months"), "%b %Y")
+  ) +
+  coord_cartesian(ylim = c(0, NA)) +
+  labs(
+    x   = "Weeks starting January 2020",
+    y   = "Cumulative COVID-19 deaths per million (US states)",
+    col = NULL
+  ) +
+  theme_classic() +
+  theme(legend.position = "right")
+```
+
+FIGURE 1.4: Each U.S. state,the lines track the cumulative COVID-19 mortality for each U.S. state. Five states receive special focus and are distinguished by color: New Jersey (green), Louisiana (red), California (plum),Maryland (blue) and Texas (salmon).All remaining states are in grey including Puerto Rico and District of Colombia.
