@@ -27,7 +27,7 @@ We aim to apply functional data analysis methods, implemented via the tidyfun pa
 2.  To visualize the temporal pattern of the total COVID-19 mortality.
 
 ```{r setup,echo=TRUE,message=FALSE}
-# ─Packages───────────────────
+# ─ Packages ───────────────────
 #List of required packages
 packages <- c(
   "refund",
@@ -47,7 +47,7 @@ invisible(lapply(packages, install_if_missing))
 
 
 
-#Calling all the packages required
+#Load packages
 library(refund)      
 library(tidyverse)   
 library(tidyfun)     
@@ -57,7 +57,7 @@ set.seed(53615)
 ```
 
 ```{r load-data, echo=TRUE, results='hide'}
-# ────Overview───────────────────
+# ──── Overview ───────────────────
 data("COVID19", package = "refund") 
 names(COVID19)
 ##  [1] "US_weekly_mort"                      "US_weekly_mort_dates"               
@@ -69,7 +69,7 @@ names(COVID19)
 ```
 
 ```{r helpers,echo=TRUE}
-# ─────────────helpers───────────────────
+# ───────────── helpers ───────────────────
 #Converts calendar dates to numeric values 
 #The tfd requires numeric values and not as dates values.
 num_grid <- function(dates, ref = min(dates)) as.numeric(dates - ref)
@@ -87,7 +87,7 @@ date_state <- COVID19$US_weekly_mort_dates
 Visualization of COVID-19 and all-cause mortality
 
 ```{r data-transformation, include=TRUE}
-# ───Data Transformation ─────────────
+# ─── Data Transformation ─────────────
 nat_weekly <- tibble(
   date = date_state,
 #The weekly all-cause death counts  
@@ -131,7 +131,7 @@ year_ticks <- nat_weekly %>%
 `tfd` object represent mortality trajectories as continuous curve.It enables interpolation between observed weeks.Using interpolation, more specifically `tf_approx_linear`, turns weekly counts into approximated functions.`tfd` treats the entire time series as a single functional observation and allows functional operations and analysis methods.
 
 ```{r , include=TRUE}
-# ─────────────────── Turn into tfd ─────────────
+# ────────── Turn into tfd ─────────────
 nat_weekly_tfd <- tfd(
 #We reshape the deaths into a 1-row matrix so it’s  one curve through 2017 to 2020.
   matrix(nat_weekly$deaths, nrow = 1),
@@ -176,7 +176,7 @@ FIGURE 1.1: The weekly death counts in the United States from 14 of January 2017
 #### Weekly US COVID-19 mortality data
 
 ```{r load-data-weeklycv19, include=TRUE}
-# ───Data ──────────────────
+# ─── Data ──────────────────
 #Obtain covid-19 associated deaths in the US
 cv19_deaths <- COVID19$US_weekly_mort_CV19
 week_diff <- COVID19$US_weekly_excess_mort_2020
@@ -372,7 +372,7 @@ covid_df <- tibble(
 # 10 Florida              [10]: ( 0,0);( 7,0);(14,0); ...
 # ℹ 42 more rows
 
-# ──────────────── Plot ────────────────
+# ─────────── Plot ────────────────
 #Plot of COVID-19 cumulative data
 
 ggplot() +
