@@ -1,0 +1,389 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={chapter 3 - Functional Principal Components Analysis},
+  pdfauthor={Vanilton Paulo},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{chapter 3 - Functional Principal Components Analysis}
+\author{Vanilton Paulo}
+\date{2025-08-16}
+
+\begin{document}
+\maketitle
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ─Packages───────────────────}
+\CommentTok{\# List of required packages}
+\NormalTok{packages }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}
+  \StringTok{"refund"}\NormalTok{,}
+  \StringTok{"tidyverse"}\NormalTok{,}
+  \StringTok{"tidyfun"}\NormalTok{,}
+  \StringTok{"patchwork"}
+\NormalTok{)}
+
+\CommentTok{\# Install missing packages}
+\NormalTok{install\_if\_missing }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(pkg) \{}
+  \ControlFlowTok{if}\NormalTok{ (}\SpecialCharTok{!}\FunctionTok{requireNamespace}\NormalTok{(pkg, }\AttributeTok{quietly =} \ConstantTok{TRUE}\NormalTok{)) \{}
+    \FunctionTok{install.packages}\NormalTok{(pkg)}
+\NormalTok{  \}}
+\NormalTok{\}}
+
+\CommentTok{\# Install missing packages}
+\FunctionTok{invisible}\NormalTok{(}\FunctionTok{lapply}\NormalTok{(packages, install\_if\_missing))}
+
+
+
+\CommentTok{\#Calling all the packages }
+\FunctionTok{library}\NormalTok{(refund)      }
+\FunctionTok{library}\NormalTok{(tidyverse)   }
+\FunctionTok{library}\NormalTok{(tidyfun)}
+\FunctionTok{library}\NormalTok{(patchwork)}
+
+
+\CommentTok{\#For reproducible results}
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{53615}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ───────────── Data ───────────────────}
+
+\NormalTok{df\_subj }\OtherTok{\textless{}{-}} \FunctionTok{read\_rds}\NormalTok{(here}\SpecialCharTok{::}\FunctionTok{here}\NormalTok{(}\StringTok{"data"}\NormalTok{,}\StringTok{"nhanes\_fda\_with\_r.rds"}\NormalTok{))}
+\CommentTok{\#df\_subj}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ─── Data Preparation ───────────────────}
+
+\CommentTok{\# filter out participants 80+ and younger than 5}
+\NormalTok{df\_subj }\OtherTok{\textless{}{-}}
+\NormalTok{  df\_subj }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{filter}\NormalTok{(age }\SpecialCharTok{\textgreater{}=} \DecValTok{5}\NormalTok{, age }\SpecialCharTok{\textless{}} \DecValTok{80}\NormalTok{)}
+
+\CommentTok{\#df\_subj}
+
+\DocumentationTok{\#\# Do fPCA on the subject{-}average MIMS profiles}
+\NormalTok{MIMS\_mat }\OtherTok{\textless{}{-}} \FunctionTok{unclass}\NormalTok{(df\_subj}\SpecialCharTok{$}\NormalTok{MIMS)}
+
+\CommentTok{\#MIMS\_mat}
+
+\NormalTok{fpca\_MIMS\_subj }\OtherTok{\textless{}{-}} \FunctionTok{fpca.face}\NormalTok{(MIMS\_mat)}
+\CommentTok{\#fpca\_MIMS\_subj}
+
+\DocumentationTok{\#\# Do PCA on the subject{-}average MIMS profiles}
+\CommentTok{\# subtract column (minute) means to center the "varianbles"}
+\NormalTok{MIMS\_mn     }\OtherTok{\textless{}{-}} \FunctionTok{colMeans}\NormalTok{(MIMS\_mat)}
+\CommentTok{\#MIMS\_mn}
+\NormalTok{MIMS\_mat\_cn }\OtherTok{\textless{}{-}} \FunctionTok{sweep}\NormalTok{(MIMS\_mat, }\AttributeTok{MARGIN=}\DecValTok{2}\NormalTok{, }\AttributeTok{STATS=}\NormalTok{MIMS\_mn, }\AttributeTok{FUN=}\StringTok{"{-}"}\NormalTok{)}
+\CommentTok{\#MIMS\_mat\_cn}
+
+\CommentTok{\#I commented this out due to run time but you need to run}
+\CommentTok{\#otherwise nothing works G}
+
+\NormalTok{svd\_MIMS\_subj }\OtherTok{\textless{}{-}} \FunctionTok{svd}\NormalTok{(MIMS\_mat\_cn)}
+
+
+\CommentTok{\# ── Turn into tfd object ─────────────}
+
+\CommentTok{\#wrap as tf objects (flip sign on PCA to match the book)}
+\NormalTok{fpca\_tf }\OtherTok{\textless{}{-}} \FunctionTok{tfd}\NormalTok{(}\FunctionTok{t}\NormalTok{(fpca\_MIMS\_subj}\SpecialCharTok{$}\NormalTok{efunctions[,}\DecValTok{1}\SpecialCharTok{:}\DecValTok{4}\NormalTok{]), }\AttributeTok{arg =} \DecValTok{1}\SpecialCharTok{:}\DecValTok{1440}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \CommentTok{\# we\textquotesingle{}ll call them PC1–PC4 in both panels}
+  \FunctionTok{set\_names}\NormalTok{(}\FunctionTok{paste0}\NormalTok{(}\StringTok{"PC"}\NormalTok{, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{4}\NormalTok{))    }
+
+\NormalTok{pca\_tf }\OtherTok{\textless{}{-}} \FunctionTok{tfd}\NormalTok{(}\FunctionTok{t}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{svd\_MIMS\_subj}\SpecialCharTok{$}\NormalTok{v[,}\DecValTok{1}\SpecialCharTok{:}\DecValTok{4}\NormalTok{]), }\AttributeTok{arg =} \DecValTok{1}\SpecialCharTok{:}\DecValTok{1440}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{set\_names}\NormalTok{(}\FunctionTok{paste0}\NormalTok{(}\StringTok{"PC"}\NormalTok{, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{4}\NormalTok{))}
+
+\CommentTok{\#build a one‐row‐per‐function tibble:}
+\NormalTok{fpca\_df }\OtherTok{\textless{}{-}} \FunctionTok{tibble}\NormalTok{(}\AttributeTok{Method =} \StringTok{"fPCA"}\NormalTok{, }\AttributeTok{Component =} \FunctionTok{names}\NormalTok{(fpca\_tf), }\AttributeTok{curve =}\NormalTok{ fpca\_tf)}
+\NormalTok{pca\_df }\OtherTok{\textless{}{-}} \FunctionTok{tibble}\NormalTok{(}\AttributeTok{Method =} \StringTok{"PCA"}\NormalTok{,  }\AttributeTok{Component =} \FunctionTok{names}\NormalTok{(pca\_tf),  }\AttributeTok{curve =}\NormalTok{ pca\_tf)}
+\NormalTok{pc\_df }\OtherTok{\textless{}{-}} \FunctionTok{bind\_rows}\NormalTok{(fpca\_df, pca\_df)}
+
+\CommentTok{\#facet labels}
+\NormalTok{method\_labeller }\OtherTok{\textless{}{-}} \FunctionTok{as\_labeller}\NormalTok{(}\FunctionTok{c}\NormalTok{(}
+  \AttributeTok{fPCA =} \StringTok{"(A) fPCA"}\NormalTok{,}
+  \AttributeTok{PCA  =} \StringTok{"(B) PCA"}
+\NormalTok{))}
+
+\CommentTok{\# clock‐time breaks}
+\NormalTok{time\_breaks }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{6}\SpecialCharTok{*}\DecValTok{60}\NormalTok{, }\DecValTok{12}\SpecialCharTok{*}\DecValTok{60}\NormalTok{, }\DecValTok{18}\SpecialCharTok{*}\DecValTok{60}\NormalTok{, }\DecValTok{23}\SpecialCharTok{*}\DecValTok{60}\NormalTok{)}
+\NormalTok{time\_labels }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\StringTok{"01:00"}\NormalTok{,}\StringTok{"06:00"}\NormalTok{,}\StringTok{"12:00"}\NormalTok{,}\StringTok{"18:00"}\NormalTok{,}\StringTok{"23:00"}\NormalTok{)}
+
+\CommentTok{\# ─ Plot ─────────────}
+
+\FunctionTok{ggplot}\NormalTok{(pc\_df, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{y =}\NormalTok{ curve, }\AttributeTok{color =}\NormalTok{ Component)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_spaghetti}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{facet\_grid}\NormalTok{(}\SpecialCharTok{\textasciitilde{}}\NormalTok{Method, }\AttributeTok{scales =} \StringTok{"free\_y"}\NormalTok{, }\AttributeTok{labeller =}\NormalTok{ method\_labeller) }\SpecialCharTok{+}
+  \FunctionTok{scale\_x\_continuous}\NormalTok{(}
+    \AttributeTok{breaks =}\NormalTok{ time\_breaks,}
+    \AttributeTok{labels =}\NormalTok{ time\_labels,}
+    \AttributeTok{expand =} \FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{,}\DecValTok{0}\NormalTok{)}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{x =} \StringTok{"Time of Day (s)"}\NormalTok{,}
+    \AttributeTok{y =} \FunctionTok{expression}\NormalTok{(}\StringTok{"Estimated Eigenfunctions ("} \SpecialCharTok{*}\NormalTok{ phi[k](s) }\SpecialCharTok{*} \StringTok{")"}\NormalTok{),}
+    \AttributeTok{color =} \StringTok{"Eigenfunction"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{(}\AttributeTok{base\_size =} \DecValTok{18}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}
+    \CommentTok{\# remove all grid lines}
+    \AttributeTok{panel.spacing =} \FunctionTok{unit}\NormalTok{(}\DecValTok{1}\NormalTok{, }\StringTok{"cm"}\NormalTok{),    }\CommentTok{\# increase vertical space}
+    \AttributeTok{panel.grid.major =} \FunctionTok{element\_blank}\NormalTok{(),}
+    \AttributeTok{panel.grid.minor =} \FunctionTok{element\_blank}\NormalTok{(),}
+    \CommentTok{\# draw axes}
+    \AttributeTok{axis.line  =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{linewidth =} \DecValTok{1}\NormalTok{),}
+    \AttributeTok{axis.ticks =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{linewidth =} \DecValTok{1}\NormalTok{),}
+    \CommentTok{\# facet labels bold}
+    \AttributeTok{strip.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{face =} \StringTok{"bold"}\NormalTok{, }\AttributeTok{size =} \DecValTok{18}\NormalTok{, }\AttributeTok{hjust =} \DecValTok{0}\NormalTok{),}
+    \CommentTok{\# legend inside top‐right, 2 columns}
+    \AttributeTok{legend.position.inside =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.9}\NormalTok{, }\FloatTok{0.9}\NormalTok{),}
+    \AttributeTok{legend.background =} \FunctionTok{element\_blank}\NormalTok{()}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{guides}\NormalTok{(}\AttributeTok{color =} \FunctionTok{guide\_legend}\NormalTok{(}\AttributeTok{ncol =} \DecValTok{2}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{chapter-3_files/figure-latex/unnamed-chunk-2-1.pdf}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#─────────────────────────── Goal ──────────────────────────────────────────────────────}
+\CommentTok{\#Interpreting the functional PCs may be challenging, particularly for PCs which explain a relatively }
+\CommentTok{\#low proportion of variance. One visualization technique is to plot the distribution of curves which }
+\CommentTok{\#load lowest/highest on a particular PC. }
+
+\CommentTok{\#Task:Here, we plot the individuals in the bottom and top 10\% of scores for the first four PCs. }
+
+
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{1983}\NormalTok{)}
+\CommentTok{\# number of eigenfunctions to plot}
+\NormalTok{K }\OtherTok{\textless{}{-}} \DecValTok{4}
+\CommentTok{\# number of sample curves to plot for each PC}
+\NormalTok{n\_plt }\OtherTok{\textless{}{-}} \DecValTok{10}
+\NormalTok{sind  }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{, }\AttributeTok{length.out =} \DecValTok{1440}\NormalTok{)}
+
+\CommentTok{\# clock‐time breaks on the 0–1 scale}
+\NormalTok{xinx }\OtherTok{\textless{}{-}}\NormalTok{ (}\FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{,}\DecValTok{6}\NormalTok{,}\DecValTok{12}\NormalTok{,}\DecValTok{18}\NormalTok{,}\DecValTok{23}\NormalTok{)}\SpecialCharTok{*}\DecValTok{60} \SpecialCharTok{+} \DecValTok{1}\NormalTok{) }\SpecialCharTok{/} \DecValTok{1440}
+\NormalTok{xinx\_lab }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\StringTok{"01:00"}\NormalTok{,}\StringTok{"06:00"}\NormalTok{,}\StringTok{"12:00"}\NormalTok{,}\StringTok{"18:00"}\NormalTok{,}\StringTok{"23:00"}\NormalTok{)}
+
+
+\DocumentationTok{\#\# ── Templates with “PC 1” etc. ─────────────────}
+\NormalTok{df\_plt\_ind }\OtherTok{\textless{}{-}} \FunctionTok{expand.grid}\NormalTok{(}
+  \AttributeTok{sind =}\NormalTok{ sind,}
+  \AttributeTok{id   =} \DecValTok{1}\SpecialCharTok{:}\NormalTok{n\_plt,}
+  \AttributeTok{high =} \FunctionTok{c}\NormalTok{(}\StringTok{"low"}\NormalTok{,}\StringTok{"high"}\NormalTok{),}
+  \AttributeTok{PC   =} \FunctionTok{paste0}\NormalTok{(}\StringTok{"PC "}\NormalTok{, }\DecValTok{1}\SpecialCharTok{:}\NormalTok{K),}
+  \AttributeTok{stringsAsFactors =} \ConstantTok{FALSE}
+\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{high =} \FunctionTok{factor}\NormalTok{(high, }\AttributeTok{levels =} \FunctionTok{c}\NormalTok{(}\StringTok{"low"}\NormalTok{,}\StringTok{"high"}\NormalTok{)))}
+
+\NormalTok{df\_plt\_ind\_mu }\OtherTok{\textless{}{-}} \FunctionTok{expand.grid}\NormalTok{(}
+  \AttributeTok{sind  =}\NormalTok{ sind,}
+  \AttributeTok{high  =} \FunctionTok{c}\NormalTok{(}\StringTok{"low"}\NormalTok{,}\StringTok{"high"}\NormalTok{),}
+  \AttributeTok{PC    =} \FunctionTok{paste0}\NormalTok{(}\StringTok{"PC "}\NormalTok{, }\DecValTok{1}\SpecialCharTok{:}\NormalTok{K),}
+  \AttributeTok{value =} \ConstantTok{NA}\NormalTok{,}
+  \AttributeTok{stringsAsFactors =} \ConstantTok{FALSE}
+\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{high =} \FunctionTok{factor}\NormalTok{(high, }\AttributeTok{levels =} \FunctionTok{c}\NormalTok{(}\StringTok{"low"}\NormalTok{,}\StringTok{"high"}\NormalTok{)))}
+
+
+\DocumentationTok{\#\# ── Loop on the FPCA‐fitted curves Yhat ─────────────────────────}
+
+
+\NormalTok{mu\_vec }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{()}
+\NormalTok{ind\_vec }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{()}
+
+\ControlFlowTok{for}\NormalTok{(k }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{K) \{}
+  \CommentTok{\# 3a) 10th / 90th score cutoffs}
+\NormalTok{  sc }\OtherTok{\textless{}{-}}\NormalTok{ fpca\_MIMS\_subj}\SpecialCharTok{$}\NormalTok{scores[,k]}
+\NormalTok{  q }\OtherTok{\textless{}{-}} \FunctionTok{quantile}\NormalTok{(sc, }\FunctionTok{c}\NormalTok{(}\FloatTok{0.1}\NormalTok{, }\FloatTok{0.9}\NormalTok{))}
+\NormalTok{  lo }\OtherTok{\textless{}{-}} \FunctionTok{which}\NormalTok{(sc }\SpecialCharTok{\textless{}=}\NormalTok{ q[}\DecValTok{1}\NormalTok{])}
+\NormalTok{  hi }\OtherTok{\textless{}{-}} \FunctionTok{which}\NormalTok{(sc }\SpecialCharTok{\textgreater{}}\NormalTok{  q[}\DecValTok{2}\NormalTok{])}
+  
+  \CommentTok{\# 3b) group means from *Yhat*}
+\NormalTok{  mu\_lo }\OtherTok{\textless{}{-}} \FunctionTok{colMeans}\NormalTok{(fpca\_MIMS\_subj}\SpecialCharTok{$}\NormalTok{Yhat[lo,  ])}
+\NormalTok{  mu\_hi }\OtherTok{\textless{}{-}} \FunctionTok{colMeans}\NormalTok{(fpca\_MIMS\_subj}\SpecialCharTok{$}\NormalTok{Yhat[hi,  ])}
+\NormalTok{  mu\_vec }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(mu\_vec, mu\_lo, mu\_hi)}
+  
+  \CommentTok{\# 3c) sample n\_plt curves from Yhat}
+\NormalTok{  sam\_lo }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(lo, }\AttributeTok{size =}\NormalTok{ n\_plt)}
+\NormalTok{  sam\_hi }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(hi, }\AttributeTok{size =}\NormalTok{ n\_plt)}
+\NormalTok{  ind\_lo }\OtherTok{\textless{}{-}} \FunctionTok{as.vector}\NormalTok{(}\FunctionTok{t}\NormalTok{(fpca\_MIMS\_subj}\SpecialCharTok{$}\NormalTok{Yhat[sam\_lo, ]))}
+\NormalTok{  ind\_hi }\OtherTok{\textless{}{-}} \FunctionTok{as.vector}\NormalTok{(}\FunctionTok{t}\NormalTok{(fpca\_MIMS\_subj}\SpecialCharTok{$}\NormalTok{Yhat[sam\_hi, ]))}
+\NormalTok{  ind\_vec }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(ind\_vec, ind\_lo, ind\_hi)}
+\NormalTok{\}}
+
+\NormalTok{df\_plt\_ind\_mu}\SpecialCharTok{$}\NormalTok{value }\OtherTok{\textless{}{-}}\NormalTok{ mu\_vec}
+\NormalTok{df\_plt\_ind}\SpecialCharTok{$}\NormalTok{value }\OtherTok{\textless{}{-}}\NormalTok{ ind\_vec}
+
+
+
+\CommentTok{\# ── Turn into tfd object ─────────────}
+
+\NormalTok{xinx }\OtherTok{\textless{}{-}}\NormalTok{ (}\FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{6}\NormalTok{, }\DecValTok{12}\NormalTok{, }\DecValTok{18}\NormalTok{, }\DecValTok{23}\NormalTok{) }\SpecialCharTok{*} \DecValTok{60} \SpecialCharTok{+} \DecValTok{1}\NormalTok{) }\SpecialCharTok{/} \DecValTok{1440}
+\NormalTok{xinx\_lab }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\StringTok{"01:00"}\NormalTok{,}\StringTok{"06:00"}\NormalTok{,}\StringTok{"12:00"}\NormalTok{,}\StringTok{"18:00"}\NormalTok{,}\StringTok{"23:00"}\NormalTok{)}
+
+\CommentTok{\#  individuals {-}\textgreater{} one row per (PC, high, id)}
+\NormalTok{ind\_tf }\OtherTok{\textless{}{-}}\NormalTok{ df\_plt\_ind }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(PC, high, id) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{summarize}\NormalTok{(}\AttributeTok{curve =} \FunctionTok{tfd}\NormalTok{(value, }\AttributeTok{arg =}\NormalTok{ sind), }\AttributeTok{.groups =} \StringTok{"drop"}\NormalTok{)}
+
+\CommentTok{\#  means {-}\textgreater{} one row per (PC, high)}
+\NormalTok{mu\_tf }\OtherTok{\textless{}{-}}\NormalTok{ df\_plt\_ind\_mu }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(PC, high) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{summarize}\NormalTok{(}\AttributeTok{curve =} \FunctionTok{tfd}\NormalTok{(value, }\AttributeTok{arg =}\NormalTok{ sind), }\AttributeTok{.groups =} \StringTok{"drop"}\NormalTok{)}
+
+\CommentTok{\# ─────────────────── Plot ─────────────}
+\CommentTok{\#Goal:}
+\CommentTok{\#We can then plot the average and individual curves. We do see the individual curves}
+\CommentTok{\#which load highly on each of the first four PCs do, on average, largely reflect the shapes of the PCs, with this visual effect most strong for the first three PCs.}
+
+\FunctionTok{ggplot}\NormalTok{() }\SpecialCharTok{+}
+  \CommentTok{\# thin \& transparent individual curves}
+  \FunctionTok{geom\_spaghetti}\NormalTok{(}
+    \AttributeTok{data      =}\NormalTok{ ind\_tf,}
+    \FunctionTok{aes}\NormalTok{(}\AttributeTok{y =}\NormalTok{ curve, }\AttributeTok{color =}\NormalTok{ high),  }\CommentTok{\# Use \textquotesingle{}y\textquotesingle{} instead of \textquotesingle{}tf\textquotesingle{}}
+    \AttributeTok{linewidth =} \FloatTok{0.5}\NormalTok{,}
+    \AttributeTok{alpha     =} \FloatTok{0.4}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \CommentTok{\# thick \& opaque mean curves}
+  \FunctionTok{geom\_spaghetti}\NormalTok{(}
+    \AttributeTok{data      =}\NormalTok{ mu\_tf,}
+    \FunctionTok{aes}\NormalTok{(}\AttributeTok{y =}\NormalTok{ curve, }\AttributeTok{color =}\NormalTok{ high),  }\CommentTok{\# Use \textquotesingle{}y\textquotesingle{} instead of \textquotesingle{}tf\textquotesingle{}}
+    \AttributeTok{linewidth =} \DecValTok{2}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{facet\_wrap}\NormalTok{(}\SpecialCharTok{\textasciitilde{}}\NormalTok{ PC, }\AttributeTok{ncol =} \DecValTok{2}\NormalTok{, }\AttributeTok{scales =} \StringTok{"free\_y"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{scale\_x\_continuous}\NormalTok{(}
+    \AttributeTok{breaks =}\NormalTok{ xinx,}
+    \AttributeTok{labels =}\NormalTok{ xinx\_lab,}
+    \AttributeTok{expand =} \FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{)}
+\NormalTok{  )}\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{x     =} \StringTok{"Time of Day"}\NormalTok{,}
+    \AttributeTok{y     =} \FunctionTok{expression}\NormalTok{(}\StringTok{"MIMS: "} \SpecialCharTok{*}\NormalTok{ W[i](s)),}
+    \AttributeTok{color =} \StringTok{"Group"}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{scale\_color\_manual}\NormalTok{(}
+    \AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\AttributeTok{low =} \StringTok{"steelblue"}\NormalTok{, }\AttributeTok{high =} \StringTok{"tomato"}\NormalTok{),}
+    \AttributeTok{labels =} \FunctionTok{c}\NormalTok{(}\StringTok{"Bottom 10\%"}\NormalTok{, }\StringTok{"Top 10\%"}\NormalTok{)}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{(}\AttributeTok{base\_size =} \DecValTok{16}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}
+    \AttributeTok{panel.spacing    =} \FunctionTok{unit}\NormalTok{(}\FloatTok{0.8}\NormalTok{, }\StringTok{"cm"}\NormalTok{),}
+    \AttributeTok{panel.grid       =} \FunctionTok{element\_blank}\NormalTok{(),}
+    \AttributeTok{axis.line        =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{linewidth =} \DecValTok{1}\NormalTok{),}
+    \AttributeTok{axis.ticks       =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{linewidth =} \DecValTok{1}\NormalTok{),}
+    \AttributeTok{strip.text       =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{face =} \StringTok{"bold"}\NormalTok{, }\AttributeTok{size =} \DecValTok{16}\NormalTok{, }\AttributeTok{hjust =} \DecValTok{0}\NormalTok{),}
+    \AttributeTok{legend.position  =} \StringTok{"bottom"}\NormalTok{,}
+    \AttributeTok{legend.background =} \FunctionTok{element\_blank}\NormalTok{()}
+\NormalTok{  )}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{chapter-3_files/figure-latex/unnamed-chunk-3-1.pdf}}
+
+\end{document}

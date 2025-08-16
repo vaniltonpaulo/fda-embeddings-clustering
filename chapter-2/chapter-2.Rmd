@@ -1,0 +1,387 @@
+---
+title: "Chapter 2 - Key Methodological Concepts"
+author: "Vanilton Paulo"
+date: "2025-08-15"
+output: html_document
+---
+
+# SVD for US Excess Mortality
+
+```{r setup,echo=TRUE,message=FALSE}
+# ─Packages───────────────────
+# List of required packages
+packages <- c(
+  "refund",
+  "tidyverse",
+  "tidyfun",
+  "gridExtra"
+)
+
+# Install missing packages
+install_if_missing <- function(pkg) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    install.packages(pkg)
+  }
+}
+
+# Install missing packages
+invisible(lapply(packages, install_if_missing))
+
+
+
+#Calling all the packages 
+library(refund)      
+library(tidyverse)   
+library(tidyfun)     
+library(gridExtra)
+
+#For reproducible results
+set.seed(53615)
+```
+
+```{r helpers,echo=TRUE}
+# ─────────────helpers───────────────────
+#Conversion of the dates into numbers 
+#Because the args of tfd need numbers and  not dates.
+num_grid <- function(dates, ref = min(dates)) as.numeric(dates - ref)
+reference_date <- as.Date("2020-01-01")
+```
+
+#### Weekly all-cause mortality data
+
+```{r load-data,echo=TRUE, results='hide'}
+# ─ Data ─────────────────────────────────
+# ────Overview───────────────────
+data("COVID19", package = "refund") 
+names(COVID19)
+##  [1] "US_weekly_mort"                      "US_weekly_mort_dates"               
+##  [3] "US_weekly_mort_CV19"                 "US_weekly_mort_CV19_dates"          
+##  [5] "US_weekly_excess_mort_2020"          "US_weekly_excess_mort_2020_dates"   
+##  [7] "US_states_names"                     "US_states_population"               
+##  [9] "States_excess_mortality"             "States_excess_mortality_per_million"
+## [11] "States_CV19_mortality"               "States_CV19_mortality_per_million"
+
+
+new_states <- COVID19$US_states_names
+current_date <- COVID19$US_weekly_excess_mort_2020_dates
+Wd <- COVID19$States_excess_mortality_per_million  
+```
+
+```{r , include=TRUE, fig.width= 10}
+# ── Data Transformation ───────────────────
+
+#Converts weekly excess deaths to cumulative totals per state 
+#This is the same as Wr in the book
+cum_mat   <- t(apply(Wd, 1, cumsum))
+
+# ─────────────────── Turn into tfd ─────────────
+
+states_cum_tf <- tfd(
+  cum_mat,
+  arg = num_grid(current_date),
+  id  = new_states,
+  var = "cum_excess"
+)
+# tfd[52] on (0,357) based on 52 evaluations each
+# interpolation by tf_approx_linear 
+# [1]: ( 0, 0.8);( 7, 8.3);(14,-6.9); ...
+# [2]: ( 0,  -5);( 7,  19);(14,  26); ...
+# [3]: ( 0,  -7);( 7,  -1);(14,   5); ...
+# [4]: ( 0,  -7);( 7,  21);(14,  20); ...
+# [5]: ( 0,   5);( 7,   7);(14,  12); ...
+#     [....]   (47 not shown)
+# ── grand‐mean & centered curves ─────────────────────────────────────────
+#average curve across all states
+mean_curve  <- mean(states_cum_tf)
+
+#subtracts the mean curve from each state's curve, so that we  can analyze deviations from the national pattern.
+centered_states_cum_tf <- scale(states_cum_tf, scale = FALSE)
+
+
+# ── Plot ────────────────
+#Visualise the data for each state and territory (gray solid lines) and the mean (dark red solid line).
+
+ggplot() +
+  geom_spaghetti(aes(y = states_cum_tf),
+                 colour = "grey20", alpha = 0.15) +
+  geom_spaghetti(aes(y = mean_curve),
+                 colour = "darkred", linewidth = 1.4) +
+  scale_x_continuous(
+    name = "Weeks starting January 2020",
+    breaks = as.numeric(seq(reference_date, as.Date("2021-01-01"), by = "3 months") - reference_date),
+    labels = format(seq(reference_date, as.Date("2021-01-01"), by = "3 months"), "%b %Y")
+  ) +
+  labs(
+    x     = "Weeks starting January 2020",
+    y     = "Cumulative excess deaths per million"
+  ) +
+  theme_classic(base_size = 13)
+```
+
+#### Display the de-meaned data
+
+```{r , include=TRUE, fig.width= 10}
+# ─────────────────────── Display the de-meaned data ──────────────────────
+# Display the de-meaned data
+# We now show the effect of the subtracting the mean from the original data.
+# Five states are emphasized: New Jersey (green), Louisiana (red), California (plum), Maryland (blue) and Texas (salmon).
+
+
+
+centered_cum_states_tf_v2 <- tfd(
+  t(apply(centered_states_cum_tf, 1, identity)),
+  arg = num_grid(current_date),
+  id = new_states
+)
+# tfd[52] on (0,357) based on 52 evaluations each
+# interpolation by tf_approx_linear 
+# [1]: ( 0,  -5);( 7,  -3);(14, -22); ...
+# [2]: ( 0, -11);( 7,   8);(14,  11); ...
+# [3]: ( 0, -13);( 7, -12);(14, -10); ...
+# [4]: ( 0, -12);( 7,  10);(14,   5); ...
+# [5]: ( 0,-0.6);( 7,-3.7);(14,-3.2); ...
+#     [....]   (47 not shown)
+# ── Plot ────────────────
+
+ggplot() +
+  geom_spaghetti(aes(y = centered_cum_states_tf_v2),
+                 colour = "grey60", alpha = 0.2, linewidth = 0.5) +
+  geom_spaghetti(aes(y = centered_cum_states_tf_v2[which(new_states == "New Jersey")]),
+                 colour = "darkseagreen3", linewidth = 1.2, alpha = 3) +
+  geom_spaghetti(aes(y = centered_cum_states_tf_v2[which(new_states == "Louisiana")]),
+                 colour = "red", linewidth = 1.2, alpha = 3) +
+  geom_spaghetti(aes(y = centered_cum_states_tf_v2[which(new_states == "California")]),
+                 colour = "plum3", linewidth = 1.2, alpha = 3) +
+  geom_spaghetti(aes(y = centered_cum_states_tf_v2[which(new_states == "Maryland")]),
+                 colour = "deepskyblue4", linewidth = 1.2, alpha = 3) +
+  geom_spaghetti(aes(y = centered_cum_states_tf_v2[which(new_states == "Texas")]),
+                 colour = "salmon", linewidth = 1.2, alpha = 3) +
+  scale_x_continuous(
+    name = "Weeks starting January 2020",
+    breaks = as.numeric(seq(reference_date, as.Date("2021-01-01"), by = "3 months") - reference_date),
+    labels = format(seq(reference_date, as.Date("2021-01-01"), by = "3 months"), "%b %Y")
+  ) +
+  labs(
+    x = "Weeks starting January 2020",
+    y = "US states centered cumulative excess deaths/million"
+  ) +
+  theme_classic(base_size = 13)
+
+```
+
+#### Display the first two right singular vectors
+
+```{r , include=TRUE}
+# ───── Display the first two right singular vectors─────────────────────────────
+
+# In place of the scale function, the mean curve was subtracted. 
+# This approach facilitates comparison with the variable W as presented in the book, 
+#and ultimately yields an equivalent result.
+centered_states_cum_tf <- states_cum_tf - mean_curve
+
+# FPCA
+covid_pc <- tfb_fpc(centered_states_cum_tf, pve = 0.99)
+# tfb[52] on (0,357) in basis representation:
+#  using  4 FPCs 
+# [1]: ( 0,-1.2);( 7,-0.4);(14,-1.6); ...
+# [2]: ( 0,  -5);( 7,  -5);(14,  -8); ...
+# [3]: ( 0,  -4);( 7,  -3);(14,  -8); ...
+# [4]: ( 0,-0.6);( 7,-0.7);(14,-1.5); ...
+# [5]: ( 0,  -4);( 7,  -3);(14,  -5); ...
+#     [....]   (47 not shown)
+
+basis_functions <- tf_basis(covid_pc, as_tfd = TRUE)
+# tfd[5] on (0,357) based on 52 evaluations each
+# interpolation by tf_approx_linear 
+# [1]: ( 0, 5e-16);( 7, 1e-16);(14, 1e-15); ...
+# [2]: ( 0, 3e-04);( 7, 3e-04);(14, 3e-04); ...
+# [3]: ( 0,-6e-04);( 7,-9e-04);(14,-2e-03); ...
+# [4]: ( 0,-0.003);( 7,-0.001);(14,-0.003); ...
+# [5]: ( 0,-0.004);( 7,-0.010);(14,-0.023); ...
+
+# ───── Book's approach for comparison(manual svd approach)─────────────────────────────
+
+#Construct the de-meaned data. The columns of W have mean zero
+W <- scale(cum_mat, center = TRUE, scale = FALSE)
+# SVD
+svd_W <- svd(W)
+# Eigenfunctions (right singular vectors)
+V <- svd_W$v
+
+
+
+# ───── Plot(Comparison)─────────────────────────────
+#Display the first two right singular vectors
+
+par(mar = c(5, 4, 4, 8) + 0.1,
+    xpd = TRUE)    
+
+
+plot(num_grid(current_date), V[,1], type="l", col="coral", lwd=2.5,
+     ylab="Eigenfunctions", xlab="2020 calendar year (in days)",
+     ylim = c(-0.35, 0.35), 
+     cex=1, bty="n")
+
+# FPCA PC1
+lines(basis_functions[2],   col="coral",  lwd=2, lty=2)   
+# SVD PC2
+lines(num_grid(current_date), V[,2],      col="coral4", lwd=2) 
+# FPCA PC2
+lines(basis_functions[3],   col="coral4", lwd=2, lty=2)   
+
+
+legend("topright",
+       legend = c("SVD PC1", "FPCA PC1", "SVD PC2", "FPCA PC2"),
+       col = c("coral", "coral", "coral4", "coral4"),
+       lty = c(1, 2, 1, 2),
+       lwd = 2,
+       bty = "n",
+       cex = 0.7,
+       # Two columns to save space
+       ncol = 2)  
+```
+
+```{r , include=TRUE}
+
+```
+
+According to the book, the analysis relies on a rank $K_0=2$ reconstruction, a method that explains 95.9% of the variability within the de-meaned data.
+
+```{r , include=TRUE, fig.width=15}
+# ──────────────────── Compare the real and reconstructed data ──────────────────────
+#Book approach for comparison later
+mW <- colMeans(cum_mat)
+
+#Construct a matrix of same dimension as cum_mat with the mean of cum_mat on each row
+mW_mat <- matrix(rep(mW, each = nrow(cum_mat)), ncol = ncol(cum_mat))
+
+
+
+# Manual reconstruction (K = 2)
+K0 <- 2
+rec <- svd_W$u[,1:K0] %*% diag(svd_W$d[1:K0]) %*% t(V[,1:K0])
+WK0 <- mW_mat + rec
+
+
+
+# Manual SVD reconstruction as tfd
+manual_svd <- tfd(WK0, arg = num_grid(current_date), id = new_states, var = "cum_excess")
+# tfd[52] on (0,357) based on 52 evaluations each
+# interpolation by tf_approx_linear 
+# [1]: ( 0, 9);( 7,15);(14,22); ...
+# [2]: ( 0, 2);( 7, 7);(14,10); ...
+# [3]: ( 0, 9);( 7,15);(14,22); ...
+# [4]: ( 0, 7);( 7,14);(14,22); ...
+# [5]: ( 0, 4);( 7,10);(14,13); ...
+#     [....]   (47 not shown)
+
+
+#Uses functional principal components
+svd_tfb <- tfb_fpc(states_cum_tf, pve = .9)
+# tfb[52] on (0,357) in basis representation:
+#  using  2 FPCs 
+# [1]: ( 0, 9);( 7,15);(14,22); ...
+# [2]: ( 0, 2);( 7, 7);(14,10); ...
+# [3]: ( 0, 9);( 7,15);(14,22); ...
+# [4]: ( 0, 7);( 7,14);(14,22); ...
+# [5]: ( 0, 4);( 7,10);(14,13); ...
+#     [....]   (47 not shown)
+
+
+
+
+
+emphasize <- c("New Jersey", "Louisiana", "California", "Maryland", "Texas")
+emph_cols <- c("plum3","red", "deepskyblue4","darkseagreen3", "salmon")
+
+# Create comparison data frame
+comp_df <- tibble(
+  state = new_states,
+  original_curve = states_cum_tf,
+  recon_manual = manual_svd,      # Manual SVD reconstruction
+  recon_tfb = svd_tfb            # tfb_fpc reconstruction
+) %>%
+  filter(state %in% emphasize)
+
+# ───── Plot ────────────────────────────────────
+
+
+# Original vs Manual SVD reconstruction 
+
+p1 <- ggplot(comp_df) +
+  geom_spaghetti(aes(y = original_curve, color = state),
+                 linewidth = 2, alpha = 0.8) +
+  geom_spaghetti(aes(y = recon_manual, color = state),
+                 linewidth = 2, linetype = "dashed", alpha = 0.8) +
+  scale_color_manual(values = emph_cols) +
+  scale_x_continuous(
+    name = "Weeks starting January 2020",
+    breaks = as.numeric(seq(reference_date, as.Date("2021-01-01"), by = "3 months") - reference_date),
+    labels = format(seq(reference_date, as.Date("2021-01-01"), by = "3 months"), "%b %Y")
+  ) +
+  labs(
+    title = "Manual SVD  (K=2)",
+    x = "Weeks starting January 2020",
+    y = "Cumulative excess deaths per million",
+    color = NULL
+  ) +
+  theme_classic(base_size = 14)
+
+#Original vs tfb_fpc 
+p2 <- ggplot(comp_df) +
+  geom_spaghetti(aes(y = original_curve, color = state),
+                 linewidth = 2, alpha = 0.8) +
+  geom_spaghetti(aes(y = recon_tfb, color = state),
+                 linewidth = 2, linetype = "dashed", alpha = 0.8) +
+  scale_color_manual(values = emph_cols) +
+  scale_x_continuous(
+    name = "Weeks starting January 2020",
+    breaks = as.numeric(seq(reference_date, as.Date("2021-01-01"), by = "3 months") - reference_date),
+    labels = format(seq(reference_date, as.Date("2021-01-01"), by = "3 months"), "%b %Y")
+  ) +
+  labs(
+    title = "tfb_fpc Reconstruction",
+    x = "Weeks starting January 2020",
+    y = "Cumulative excess deaths per million",
+    color = NULL
+  ) +
+  theme_classic(base_size = 14)
+
+# Display plots
+
+grid.arrange(p1 , p2, ncol=2)
+
+
+```
+
+```{r , include=TRUE}
+
+```
+
+```{r , include=TRUE}
+
+```
+
+```{r , include=TRUE}
+
+```
+
+```{r , include=TRUE}
+
+```
+
+```{r , include=TRUE}
+
+```
+
+```{r , include=TRUE}
+
+```
+
+```{r , include=TRUE}
+
+```
+
+```{r , include=TRUE}
+
+```

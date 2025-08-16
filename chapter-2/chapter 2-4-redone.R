@@ -21,9 +21,9 @@ states_cum_tf
 
 # Manual SVD reconstruction as tfd
 manual_svd <- tfd(WK0, arg = num_grid(current_date), id = new_states, var = "cum_excess")
-
-svd_tfb <- tfb_fpc(states_cum_tf)
-
+manual_svd
+svd_tfb <- tfb_fpc(states_cum_tf, pve = .9)
+svd_tfb
 
 
 
