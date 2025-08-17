@@ -188,6 +188,7 @@ pred_tf <-tfb_fpc(Pred_mat,arg)
 ## [5]: (-20,7);(-19,7);(-18,7); ...
 ##     [....]   (361 not shown)
 ```
+
 Perform clustering on predicted functions
 
 ```{r , include=TRUE}
@@ -203,6 +204,7 @@ cluster_tbl <- tf_join_clusters_tf(pred_tf, km_res$cluster)
 ```
 
 Visualize the results by plotting the predicted CD4 functional curves alongside their corresponding clusters and the estimated cluster centers.
+
 ```{r , include=TRUE,fig.width=9}
 # ─────────────────── Plot ─────────────
 tf_plot_clusters_tf(cluster_tbl, centers_tbl)
@@ -346,6 +348,7 @@ mean_week10   <- mean(week10_vals, na.rm = TRUE)
 median_week10 <- median(week10_vals, na.rm = TRUE)
 ## [1] 2.626611
 ```
+
 On March 7, 2020 (week 10), the excess mortality rate was 3.3 deaths per million on average, with a median of 2.63 deaths per million.
 
 ```{r , include=TRUE}
@@ -358,8 +361,8 @@ val_out <- round(Wd_tfd[ind_out, tnum[6:14]], 1)
 
 An outlier was observed in North Dakota on week 10. The state's excess mortality rates from weeks 6 to 14 were: 10.5, -17, 49.7, 10.5, 70.6, 39.2, 6.5, -30.1, -41.8 excess mortality.
 
-
 Identify the five states with the highest weekly excess mortality rates on week 20.
+
 ```{r , include=TRUE}
 # ---- Top 5 states at week 20 ----
 vals20 <- Wd_tfd[, tnum[20]]
@@ -367,7 +370,10 @@ ord20  <- order(vals20)
 topweek20 <- round(vals20[ord20][48:52], 1)
 states_top_20 <- states[ord20][48:52]
 ```
+
 For week 20, the five states with the highest excess mortality rates per million residents were the District of Columbia (136.1), Massachusetts (122.1), Delaware (114.5), Connecticut (106.3), and New Jersey (104.5), in descending order.
+
+Identify the five states with the highest weekly excess mortality rates on week 30.
 
 ```{r , include=TRUE}
 # ---- Top 5 states at week 30 ----
@@ -375,25 +381,25 @@ vals30 <- Wd_tfd[, tnum[30]]
 ord30  <- order(vals30)
 topweek30 <- round(vals30[ord30][48:52], 1)
 states_top_30 <- states[ord30][48:52]
+```
 
-topweek30
-states_top_30
+For week 30, the five states with the highest excess mortality rates per million residents were Mississippi (119.3), Arizona (107), Texas (88.8), Louisiana (87), and South Carolina (84.7), in descending order.
 
+Identify the five states with the highest weekly excess mortality rates on week 40.
 
+```{r , include=TRUE}
 # ---- Top 5 states at week 40 ----
 vals40 <- Wd_tfd[, tnum[40]]
 ord40  <- order(vals40)
 topweek40 <- round(vals40[ord40][48:52], 1)
 states_top_40 <- states[ord40][48:52]
-
-topweek40
-states_top_40
-
 ```
+
+For week 40, the five states with the highest excess mortality rates per million residents were North Dakota (75.8), Arkansas (72.3), the District of Columbia (58.9), Missouri (58.4), and Wyoming (53.2), in descending order.
 
 #### K-means clustering of the functional data
 
-```{r , include=TRUE,fig.width=9}
+```{r , include=TRUE,fig.width=9,message=FALSE}
 # ──────────────── K-means clustering of the functional data ──────────────────────────────
 
 rownames(Wd) <- states
@@ -448,5 +454,127 @@ tf_plot_clusters_tf(cluster_tbl, centers_tbl) +
 ```
 
 ```{r , include=TRUE}
+##  ─── US MAP PLOT ──────────────────────
 
+# color per group as per the book
+colset <- c(rgb(0.41, 0.05, 0.68), rgb(0, 1, 0), rgb(1, .55, 0))
+
+## load state date which contains FIPS code
+data("statepop")
+
+## create a data frame to plot based on the input requirement
+state_cluster <- data.frame(full = names(cl_ind), cluster = unname(cl_ind))
+data_cluster <- statepop %>%
+  left_join(state_cluster, by = "full") %>%
+  select(fips, cluster)
+data_cluster$cluster <- as.factor(data_cluster$cluster)
+
+## make the US map
+ plot_usmap(regions = "states", data = data_cluster, values = "cluster") +
+  scale_fill_manual(name = "Cluster", values = colset) +
+  labs(title = "") +
+  theme(legend.position = "right", 
+        plot.title = element_text(hjust = 0.5, face = "bold"))
+
+
+# Start with default state centers
+state_centers <- data.frame(
+  state = tolower(state.name),
+  lon = state.center$x,
+  lat = state.center$y
+)
+
+
+# Modify locations for Alaska and Hawaii (inset display)
+state_centers <- state_centers %>%
+  mutate(
+    lon = case_when(
+      state == "alaska" ~ -116,
+      state == "hawaii" ~ -103,
+      TRUE ~ lon
+    ),
+    lat = case_when(
+      state == "alaska" ~ 28,
+      state == "hawaii" ~ 28,
+      TRUE ~ lat
+    )
+  )
+
+# Add Distric of Columbia and Puerto Rico
+state_centers <- rbind(
+  state_centers,
+  data.frame(state = "district of columbia", lon = -77.03, lat = 38.89),
+  data.frame(state = "puerto rico", lon = -108, lat = 30)
+)
+
+
+
+# Rename for join
+state_centers <- state_centers %>%
+  rename(region = state)
+# ──────────────── Join Plot Data ───────────────────────────────
+
+state_plot_df <- tibble(
+  state   = tolower(states),
+  curve   = pred_tf,
+  cluster = factor(cl_ind)
+) %>%
+  left_join(state_centers, by = c("state" = "region"))
+
+# ──────────────── US Map with Glyphs ───────────────────────────────
+
+# ──────────────── US Map with Glyphs (Fixed) ───────────────────────────────
+
+# Use usmap's state outlines
+us_map_df <- us_map("states")
+
+
+
+# Convert state_plot_df to sf object and transform to match us_map_df
+state_plot_sf <- state_plot_df %>%
+  st_as_sf(coords = c("lon", "lat"), crs = 4326) %>%  # WGS84 (lat/lon)
+  st_transform(st_crs(us_map_df)) %>%  # Transform to match us_map_df projection
+  # Extract transformed coordinates
+  mutate(
+    x_proj = st_coordinates(.)[,1],
+    y_proj = st_coordinates(.)[,2]
+  ) %>%
+  st_drop_geometry()  # Remove geometry column to work with regular dataframe
+
+ ggplot() +
+  # First add the map layer using geom_sf
+  geom_sf(data = us_map_df,
+          fill = "white",
+          color = "black",
+          size = 0.2) +
+  # Then add the functional data glyphs using transformed coordinates
+  geom_capellini(data = state_plot_sf,
+                 aes(x = x_proj, y = y_proj, tf = curve, colour = cluster),
+                 width = 300000, height = 400000, line.linetype = 1) +  # Adjusted size for projected coords
+  scale_color_manual(values = c("#AA00FF", "green", "#FF6D00"), name = "Cluster") +
+  coord_sf() +
+  theme_minimal() +
+  labs(title = "US States Excess Mortality Curves with Cluster Colors",
+       # or just "Longitude"
+       x = "Longitude (°)",  
+       ,# or just "Latitude"
+       y = "Latitude (°)" )
+
+```
+
+
+```{r , include=TRUE}
+```
+
+
+
+```{r , include=TRUE}
+```
+
+
+```{r , include=TRUE}
+```
+
+
+```{r , include=TRUE}
 ```
