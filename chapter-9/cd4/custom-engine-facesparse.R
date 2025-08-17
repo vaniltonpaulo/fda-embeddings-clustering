@@ -10,8 +10,21 @@ options(tfb_signif = 15)
 
 
 # ─── Convert to tf object ────────────────────────────────
+n <- nrow(cd4)
+T <- ncol(cd4)
+
+#we put everything we need in a nice tibble for better format
+#Organize tibble as outcome, time, subject ID 
+dat <- tibble(
+  y       = log(as.vector(t(cd4))),
+  argvals = rep(-18:42,  times = n),
+  subj    = rep(seq_len(n), each = T)
+) |>
+  filter(!is.na(y) & y > 4.5)
+
+#CD4 observations are sparse hence we put into tfd object
 cd4_tf <- tfd(dat, id = "subj", arg = "argvals", value = "y")
-cd4_tf
+
 # ─── face_sparse_wrapper as you had it ───────────────────
 face_scoring_function <- function(data_matrix, efunctions, mean, weights = NULL) {
   sweep(data_matrix, 2, mean) %*% efunctions
@@ -77,7 +90,7 @@ clusters <- tibble(
   cluster = factor(km_res$cluster),
   curve   = cd4_fpca
 )
-
+as.matrix(cd4_fpca[1,])
 #I need to check the centers if they look good
 as.matrix(centers_tbl$curve)
 # ─── Plot ───────────────────────────────────────

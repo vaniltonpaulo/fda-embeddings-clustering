@@ -40,27 +40,20 @@ set.seed(53615)
 ```
 
 
-
 ```{r , include=TRUE}
-# ───────────── Data ───────────────────
-
+# ── Data ───────────────────
 df_subj <- read_rds(here::here("data","nhanes_fda_with_r.rds"))
-#df_subj
-
 ```
 
 
 ```{r , include=TRUE, fig.width= 9}
 # ─── Data Preparation ───────────────────
-
-# filter out participants 80+ and younger than 5
-df_subj <-
-  df_subj %>% 
+#Filter out participants 80+ and younger than 5
+df_subj <- df_subj %>% 
   filter(age >= 5, age < 80)
 
-#df_subj
 
-## Do fPCA on the subject-average MIMS profiles
+#Perform  fPCA on the subject-average MIMS profiles
 MIMS_mat <- unclass(df_subj$MIMS)
 
 #MIMS_mat
@@ -272,20 +265,6 @@ ggplot() +
     legend.position  = "bottom",
     legend.background = element_blank()
   )
-
-```
-
-
-
-
-```{r , include=TRUE}
-
-```
-
-
-
-
-```{r , include=TRUE}
 
 ```
 

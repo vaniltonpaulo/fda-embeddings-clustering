@@ -19,6 +19,7 @@ data <- data.frame(y = log(y[-sel]), argvals = t[-sel],
 data <- data[data$y > 4.5,]
 #Provide the structure of the transformed data
 head(data)
+colnames(data)
 ##          y argvals subj....id..sel.
 ## 1 6.306275      -9                1
 ## 2 6.794587      -3                1
@@ -33,7 +34,8 @@ fit_face <- face.sparse(data, argvals.new = (-20:40),
                         calculate.scores = TRUE, 
                         newdata = data, pve = 0.95)
 
-fit_face
+fit_face$eigenfunctions
+fit_face$rand_eff$scores
 
 #Obtain the scores. Clustering could be done on the scores
 #This time we will conduct clustering on the predicted functions

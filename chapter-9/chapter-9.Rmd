@@ -1,0 +1,452 @@
+---
+title: "Chapter 9 - Clustering of Functional Data"
+author: "Vanilton Paulo"
+date: "2025-08-17"
+output: html_document
+---
+
+# Clustering Sparse CD4 Counts Data
+
+CD4 immune cells are often collected from a person at irregular intervals.They are not always available for every person at every time point hence sparse observations. When data is sparse, you can not just connect the dots to form a smooth curve for each person because there aren't simply enough points. This makes direct clustering (grouping similar curves together) impossible.
+
+We are going to use `face.sparse` to fill in for all the missing observations.This will help predict the most likely value for a CD4 count at any given time, even if a measurement was not taken. This turns the irregular, sparse data into a complete, smooth function for each individual.\
+\
+Our goal is to use `tfb_fpc` from **`tidyfun`** here using `face.sparse` as the underlying engine for estimating eigenfunctions and their scores.
+
+```{r setup,echo=TRUE,message=FALSE}
+# ─ Packages ───────────────────
+#List of required packages
+packages <- c(
+  "refund",
+  "tidyverse",
+  "tidyfun",
+  "face"
+)
+
+#Install missing packages
+install_if_missing <- function(pkg) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    install.packages(pkg)
+  }
+}
+
+#Install missing packages
+invisible(lapply(packages, install_if_missing))
+
+
+
+#Load packages
+library(refund)      
+library(tidyverse)   
+library(tidyfun)     
+library(face)
+
+#For reproducible results
+set.seed(53615)
+```
+
+```{r , include=TRUE}
+# ─────── Data ──────────────────
+data(cd4)
+```
+
+```{r helpers,echo=TRUE}
+# ───────────── helpers ───────────────────
+tf_cluster_kmeans <- function(score_mat, K) {
+  km <- kmeans(score_mat, centers = K)
+  list(cluster = km$cluster, centers = km$centers)
+}
+
+tf_cluster_hclust <- function(score_mat, method = "ward.D2", K = 3) {
+  hc <- hclust(dist(score_mat), method = method)
+  list(cluster = cutree(hc, k = K), hc = hc)
+}
+
+# centres (matrix rows) -> tidyfun curves on a given grid
+tf_centers_from_scores <- function(centers_mat, arggrid) {
+  tfd(centers_mat, arg = arggrid)
+}
+
+# tidyfun helpers (join + plot)
+tf_join_clusters_tf <- function(pred_tf, cluster_vec) {
+  tibble(
+    id      = seq_along(pred_tf),
+    cluster = factor(cluster_vec),
+    curve   = pred_tf
+  )
+}
+
+tf_plot_clusters_tf <- function(cluster_tbl, centers_tbl) {
+  ggplot() +
+    ## highlight centres
+    geom_spaghetti(
+      data = centers_tbl,
+      aes(y = curve, group = cluster),
+      colour = "black", linewidth = 1
+    ) +
+    geom_spaghetti(
+      data = centers_tbl,
+      aes(y = curve, colour = cluster, group = cluster),
+      linewidth = 1
+    ) +
+    ## individual subjects
+    geom_spaghetti(
+      data = cluster_tbl,
+      aes(y = curve, colour = cluster, group = id),
+      alpha = .15, linewidth = .7
+    ) +
+    scale_color_manual(
+      values = c("darkred", "darkorange", "darkgreen"),
+      name   = "Cluster"
+    ) +
+    labs(
+      x = "Time from seroconversion (months)",
+      y = "Log CD4 counts"
+    ) +
+    theme_minimal(base_size = 14)
+}
+```
+
+```{r , include=TRUE}
+#Load the data
+data(cd4)
+```
+
+```{r , include=TRUE}
+# ─── Data Transformation ─────────────
+n <- nrow(cd4)
+T <- ncol(cd4)
+
+dat <- data.frame(
+  y       = log(as.vector(t(cd4))),
+  argvals = rep(-18:42,  times = n),
+  subj    = rep(seq_len(n), each = T)
+) |>
+  filter(!is.na(y) & y > 4.5) |>
+  #stable order
+  arrange(subj, argvals)
+# A tibble: 1,877 × 3
+ #             y argvals  subj
+ #         <dbl>   <int> <int>
+ # 1 6.306275287      -9     1
+ # 2 6.794586581      -3     1
+ # 3 6.487684018       3     1
+ # 4 6.622736324      -3     2
+ # 5 6.129050210       3     2
+ # 6 5.198497031       9     2
+ # 7 6.073044534      15     2
+
+#Tidyfun object (one function per subject)
+cd4_tf <- tfd(dat, id = "subj", arg = "argvals", value = "y")
+```
+
+```{r , include=TRUE}
+# ─── face.sparse wrapper (the required engine)  ────────────────
+face_sparse_wrapper <- function(data, arg, pve = 0.95, ...) {
+  df <- as.data.frame(data, unnest = TRUE) |>
+    rename(y = value, argvals = arg, subj = id) |>
+    filter(!is.na(y)) |>
+    arrange(subj, argvals)
+  
+  fit <- face.sparse(
+    data             = df,
+    newdata          = df,     
+    argvals.new      = arg,    
+    pve              = pve,
+    calculate.scores = TRUE,
+    ...
+  )
+  #This will make the estimated eigenfunctions and their scores more acessible
+  list(
+    mu          = as.numeric(fit$mu.new),              
+    efunctions  = as.matrix(fit$eigenfunctions),       
+    scores      = as.matrix(fit$rand_eff$scores),      
+    npc         = ncol(fit$eigenfunctions),
+    arg         = arg
+  )
+}
+```
+
+```{r , include=TRUE}
+# fixed grid 
+arg <- -20:40  
+
+fpca_res <- face_sparse_wrapper(cd4_tf, arg = arg)
+# Predicted functions for each subject on 'arg':
+# Pred = mu + scores %*% t(efunctions)
+# scores: n x npc, efunctions: k x npc -> t(efunctions): npc x k
+Pred_mat <- fpca_res$scores %*% t(fpca_res$efunctions)
+# add mean per grid point
+Pred_mat <- sweep(Pred_mat, 2, fpca_res$mu, `+`)  
+pred_tf <-tfb_fpc(Pred_mat,arg)
+## tfb[366] on (-20,40) in basis representation:
+##  using  2 FPCs 
+## [1]: (-20,7);(-19,7);(-18,7); ...
+## [2]: (-20,6);(-19,6);(-18,6); ...
+## [3]: (-20,7);(-19,7);(-18,7); ...
+## [4]: (-20,7);(-19,7);(-18,7); ...
+## [5]: (-20,7);(-19,7);(-18,7); ...
+##     [....]   (361 not shown)
+```
+Perform clustering on predicted functions
+
+```{r , include=TRUE}
+# ─── K-means on predicted functions (matches original pipeline) ──────────────
+set.seed(202200228)
+km_res <- tf_cluster_kmeans(Pred_mat, K = 3)
+
+centers_tf  <- tf_centers_from_scores(km_res$centers, arg)
+centers_tbl <- tibble(cluster = factor(seq_len(nrow(km_res$centers))),
+                      curve   = centers_tf)
+cluster_tbl <- tf_join_clusters_tf(pred_tf, km_res$cluster)
+
+```
+
+Visualize the results by plotting the predicted CD4 functional curves alongside their corresponding clusters and the estimated cluster centers.
+```{r , include=TRUE,fig.width=9}
+# ─────────────────── Plot ─────────────
+tf_plot_clusters_tf(cluster_tbl, centers_tbl)
+
+```
+
+# US all-cause excess and Covid-19 mortality
+
+```{r , echo=TRUE,message=FALSE}
+# ─ Packages ───────────────────
+#List of required packages
+packages <- c(
+  "refund",
+  "tidyverse",
+  "tidyfun",
+  "scales",
+  "usmap",
+  "sf",
+  "viridis",
+  "factoextra",
+  "mclust"
+)
+
+#Install missing packages
+install_if_missing <- function(pkg) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    install.packages(pkg)
+  }
+}
+
+#Install missing packages
+invisible(lapply(packages, install_if_missing))
+
+library(refund)    
+library(tidyfun)   
+library(tidyverse)  
+library(scales)
+library(usmap)
+library(sf)
+library(viridis)    
+library(factoextra)
+library(mclust)
+```
+
+```{r ,  echo=TRUE, results='hide'}
+# ─── Data ────────────────────────────
+#Load data
+data("COVID19", package = "refund")
+names(COVID19)
+##  [1] "US_weekly_mort"                      "US_weekly_mort_dates"               
+##  [3] "US_weekly_mort_CV19"                 "US_weekly_mort_CV19_dates"          
+##  [5] "US_weekly_excess_mort_2020"          "US_weekly_excess_mort_2020_dates"   
+##  [7] "US_states_names"                     "US_states_population"               
+##  [9] "States_excess_mortality"             "States_excess_mortality_per_million"
+## [11] "States_CV19_mortality"               "States_CV19_mortality_per_million"
+
+states <- COVID19$US_states_names
+current_date <- COVID19$US_weekly_excess_mort_2020_dates
+Wd <- COVID19$States_excess_mortality_per_million
+reference_date <- as.Date("2020-01-01")
+
+```
+
+```{r , include=TRUE}
+# ──helpers───────────────────
+#Converts calendar dates to numeric values 
+#The tfd requires numeric values and not as dates values.
+num_grid <- function(dates, ref = min(dates)) as.numeric(dates - ref)
+
+num_grid_v2 <- function(dates, ref = as.Date("2020-01-01")) as.numeric(dates - ref)
+tnum <- num_grid_v2(current_date)
+```
+
+```{r , include=TRUE,fig.width=9}
+# ───Data Transformation ─────────────
+#Organize highlighted the states and their curves
+df_tibble <- tibble(
+  state     = states,
+  #the curves
+  mortality = tfd(Wd, arg = tnum)  
+) %>%
+  mutate(
+    highlight = if_else(
+      state %in% c("New Jersey","Louisiana","California","Maryland","Texas"),
+      state, "Other"
+    ),
+    highlight = factor(highlight, levels = c("Other",
+                                             "New Jersey","Louisiana","California","Maryland","Texas"))
+  )
+
+## # A tibble: 52 × 3
+##    state                                                  mortality highlight 
+##    <chr>                                                  <tfd_reg> <fct>     
+##  1 Alabama               [1]: ( 3,  0.8);(10,  7.5);(17,-15.2); ... Other     
+##  2 Alaska                [2]: ( 3,   -5);(10,   25);(17,    7); ... Other     
+##  3 Arizona               [3]: ( 3,   -7);(10,    6);(17,    6); ... Other     
+##  4 Arkansas              [4]: ( 3,   -7);(10,   28);(17,   -1); ... Other     
+##  5 California            [5]: ( 3,    5);(10,    2);(17,    4); ... California
+##  6 Colorado              [6]: ( 3,    3);(10,    7);(17,    4); ... Other     
+##  7 Connecticut           [7]: ( 3,  0.3);(10,  0.8);(17,  3.1); ... Other     
+##  8 Delaware              [8]: ( 3,   14);(10,   -1);(17,   -9); ... Other     
+##  9 District of Columbia  [9]: ( 3,    3);(10,    8);(17,   49); ... Other     
+## 10 Florida              [10]: ( 3,    6);(10,   10);(17,    8); ... Other     
+## # ℹ 42 more rows
+
+cols <- c(
+  "Other"      = "grey85",   
+  "New Jersey" = "darkseagreen3",  
+  "Louisiana"  = "red",  
+  "California" = "plum3",  
+  "Maryland"   = "deepskyblue4",  
+  "Texas"      = "salmon"   
+)
+
+# ─── Plot ────────────────────────────────
+#Exploratory plots and analyses
+
+ggplot(df_tibble) +
+  geom_spaghetti(aes(y = mortality, colour = highlight, group = state),alpha =0.6) +
+  scale_colour_manual(values = cols, name = "States") +
+  scale_x_continuous(
+    name = "Weeks starting January 2020",
+    breaks = as.numeric(seq(reference_date, as.Date("2021-01-01"), by = "3 months") - reference_date),
+    labels = format(seq(reference_date, as.Date("2021-01-01"), by = "3 months"), "%b %Y")
+  ) +
+  labs(y = "US states weekly excess deaths / million") +
+  theme_minimal()
+
+```
+
+Mean and median calculations provide essential summary statistics and are a key part of exploratory data analysis, helping to numerically describe the central tendency of eexcess mortality rate per one million residents for several weeks across 52 states and territories.Thus a complement and help to interpret the visual patterns seen in scatterplots.
+
+```{r , include=TRUE}
+# ────────── Summary of Analysis──────────────────────
+Wd_tfd <- tfd(Wd, arg = tnum)  
+# Extract values at week 10 for all states
+week10_vals <- Wd_tfd[, tnum[10]]
+
+mean_week10   <- mean(week10_vals, na.rm = TRUE)
+## [1] 3.302119
+median_week10 <- median(week10_vals, na.rm = TRUE)
+## [1] 2.626611
+```
+On March 7, 2020 (week 10), the excess mortality rate was 3.3 deaths per million on average, with a median of 2.63 deaths per million.
+
+```{r , include=TRUE}
+week10 <- Wd[, 10]
+ind_out <- which.max(week10_vals)
+# Get the name of that state
+state_out <- states[ind_out]
+val_out <- round(Wd_tfd[ind_out, tnum[6:14]], 1)
+```
+
+An outlier was observed in North Dakota on week 10. The state's excess mortality rates from weeks 6 to 14 were: 10.5, -17, 49.7, 10.5, 70.6, 39.2, 6.5, -30.1, -41.8 excess mortality.
+
+
+Identify the five states with the highest weekly excess mortality rates on week 20.
+```{r , include=TRUE}
+# ---- Top 5 states at week 20 ----
+vals20 <- Wd_tfd[, tnum[20]]
+ord20  <- order(vals20)
+topweek20 <- round(vals20[ord20][48:52], 1)
+states_top_20 <- states[ord20][48:52]
+```
+For week 20, the five states with the highest excess mortality rates per million residents were the District of Columbia (136.1), Massachusetts (122.1), Delaware (114.5), Connecticut (106.3), and New Jersey (104.5), in descending order.
+
+```{r , include=TRUE}
+# ---- Top 5 states at week 30 ----
+vals30 <- Wd_tfd[, tnum[30]]
+ord30  <- order(vals30)
+topweek30 <- round(vals30[ord30][48:52], 1)
+states_top_30 <- states[ord30][48:52]
+
+topweek30
+states_top_30
+
+
+# ---- Top 5 states at week 40 ----
+vals40 <- Wd_tfd[, tnum[40]]
+ord40  <- order(vals40)
+topweek40 <- round(vals40[ord40][48:52], 1)
+states_top_40 <- states[ord40][48:52]
+
+topweek40
+states_top_40
+
+```
+
+#### K-means clustering of the functional data
+
+```{r , include=TRUE,fig.width=9}
+# ──────────────── K-means clustering of the functional data ──────────────────────────────
+
+rownames(Wd) <- states
+set.seed(1000)
+km    <- kmeans(Wd, centers = 3)
+cl_ind <- km$cluster
+cl_cen <- km$centers
+
+
+
+##  ─── Build tidyfun objects ──────────────────────
+pred_tf    <- tfd(Wd, arg = tnum)
+
+centers_tf <- tfd(cl_cen, arg = tnum)
+
+# Create tibbles
+cluster_tbl <- tf_join_clusters_tf(pred_tf, cl_ind)
+centers_tbl <- tibble(
+  cluster = factor(seq_len(nrow(cl_cen))),
+  curve   = centers_tf
+)
+
+# Plot with corrected date handling
+tf_plot_clusters_tf(cluster_tbl, centers_tbl) +
+  scale_color_manual(
+    values = c("#AA00FF","green", "#FF6D00"),
+    name   = "Cluster"
+  ) +
+  scale_x_continuous(
+    breaks = function(x) {
+      # Use 2020-01-01 as reference for quarterly breaks
+      reference_date <- as.Date("2020-01-01")
+      start_date <- reference_date  # Start from Jan 1, 2020
+      end_date <- max(current_date)
+      quarterly_dates <- seq(from = start_date, to = end_date, by = "3 months")
+      # Convert to your numeric scale (days since 2020-01-01)
+      as.numeric(quarterly_dates - reference_date)
+    },
+    labels = function(x) {
+      # Convert back to dates using 2020-01-01 as reference
+      reference_date <- as.Date("2020-01-01")
+      d <- reference_date + x
+      format(d, "%b %Y")
+    },
+    name = "Weeks starting January 2020"
+  ) +
+  labs(
+    y = "Excess mortality per million",
+    title = "K-Means Clustering of State Excess-Mortality Curves"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+```{r , include=TRUE}
+
+```

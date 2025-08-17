@@ -399,7 +399,7 @@ week in 2020 minus mortality in the coresponding week in 2019).</p></li>
 <li><p>To visualize the temporal pattern of the total COVID-19
 mortality.</p></li>
 </ol>
-<pre class="r"><code># ─Packages───────────────────
+<pre class="r"><code># ─ Packages ───────────────────
 #List of required packages
 packages &lt;- c(
   &quot;refund&quot;,
@@ -419,14 +419,14 @@ invisible(lapply(packages, install_if_missing))
 
 
 
-#Calling all the packages required
+#Load packages
 library(refund)      
 library(tidyverse)   
 library(tidyfun)     
 
 #For reproducible results
 set.seed(53615)</code></pre>
-<pre class="r"><code># ────Overview───────────────────
+<pre class="r"><code># ──── Overview ───────────────────
 data(&quot;COVID19&quot;, package = &quot;refund&quot;) 
 names(COVID19)
 ##  [1] &quot;US_weekly_mort&quot;                      &quot;US_weekly_mort_dates&quot;               
@@ -435,7 +435,7 @@ names(COVID19)
 ##  [7] &quot;US_states_names&quot;                     &quot;US_states_population&quot;               
 ##  [9] &quot;States_excess_mortality&quot;             &quot;States_excess_mortality_per_million&quot;
 ## [11] &quot;States_CV19_mortality&quot;               &quot;States_CV19_mortality_per_million&quot;</code></pre>
-<pre class="r"><code># ─────────────helpers───────────────────
+<pre class="r"><code># ───────────── helpers ───────────────────
 #Converts calendar dates to numeric values 
 #The tfd requires numeric values and not as dates values.
 num_grid &lt;- function(dates, ref = min(dates)) as.numeric(dates - ref)
@@ -447,7 +447,7 @@ reference_date &lt;- as.Date(&quot;2020-01-01&quot;)</code></pre>
 counts_state &lt;- COVID19$US_weekly_mort
 date_state &lt;- COVID19$US_weekly_mort_dates</code></pre>
 <p>Visualization of COVID-19 and all-cause mortality</p>
-<pre class="r"><code># ───Data Transformation ─────────────
+<pre class="r"><code># ─── Data Transformation ─────────────
 nat_weekly &lt;- tibble(
   date = date_state,
 #The weekly all-cause death counts  
@@ -492,7 +492,7 @@ interpolation, more specifically <code>tf_approx_linear</code>, turns
 weekly counts into approximated functions.<code>tfd</code> treats the
 entire time series as a single functional observation and allows
 functional operations and analysis methods.</p>
-<pre class="r"><code># ─────────────────── Turn into tfd ─────────────
+<pre class="r"><code># ────────── Turn into tfd ─────────────
 nat_weekly_tfd &lt;- tfd(
 #We reshape the deaths into a 1-row matrix so it’s  one curve through 2017 to 2020.
   matrix(nat_weekly$deaths, nrow = 1),
@@ -535,7 +535,7 @@ May 2018 , there were 53,874 deaths nationwide.</p>
 </div>
 <div id="weekly-us-covid-19-mortality-data" class="section level4">
 <h4>Weekly US COVID-19 mortality data</h4>
-<pre class="r"><code># ───Data ──────────────────
+<pre class="r"><code># ─── Data ──────────────────
 #Obtain covid-19 associated deaths in the US
 cv19_deaths &lt;- COVID19$US_weekly_mort_CV19
 week_diff &lt;- COVID19$US_weekly_excess_mort_2020
@@ -722,7 +722,7 @@ covid_df &lt;- tibble(
 # 10 Florida              [10]: ( 0,0);( 7,0);(14,0); ...
 # ℹ 42 more rows
 
-# ──────────────── Plot ────────────────
+# ─────────── Plot ────────────────
 #Plot of COVID-19 cumulative data
 
 ggplot() +
