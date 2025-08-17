@@ -115,6 +115,7 @@ ggplot() +
   ) +
   theme_classic(base_size = 13)
 ```
+FIGURE 2.1: This plot displays the cumulative weekly excess deaths per million for all 52 U.S. states and territories (gray lines). The bold dark red line represents the mean cumulative excess mortality across all states.
 
 #### Display the de-meaned data
 
@@ -124,7 +125,6 @@ Jersey (green), Louisiana (red), California (plum), Maryland (blue), and
 Texas (salmon).
 
 ```{r , include=TRUE, fig.width= 10}
-# ─────────────────────── Display the de-meaned data ──────────────────────
 centered_cum_states_tf_v2 <- tfd(
   t(apply(centered_states_cum_tf, 1, identity)),
   arg = num_grid(current_date),
@@ -164,6 +164,10 @@ ggplot() +
   ) +
   theme_classic(base_size = 13)
 ```
+
+
+FIGURE 2.2: This plot shows the centered cumulative excess deaths per million, which are the deviations from the mean national trend for each state. The gray lines represent all states, while five specific states are highlighted to emphasize their individual trends: New Jersey (dark green), Louisiana (red), California (plum), Maryland (deepskyblue), and Texas (salmon).
+
 
 Singular Value Decomposition (`svd`)
 
@@ -241,16 +245,23 @@ Furthermore
 
 ------------------------------------------------------------------------
 
-#### Display the first two eigenfunctions
+While the book's solution uses Singular Value Decomposition (`svd`), a
+more specialized approach for functional data involves using Functional
+Principal Component Analysis (fPCA). The `tfb_fpc` function is
+specifically designed for this purpose, as it treats each state's
+mortality data as a continuous curve, or a function, rather than a
+simple collection of data points.
 
-Here we are going to extract the first two eigenfunctions
+#### Display the second and third eigenfunctions.
+
+The `tfb_fpc` function is then applied to the centered data to perform
+fPCA. The argument `pve = 0.99` instructs the function to select enough
+principal components to explain 99% of the total variance in the data.
 
 ```{r , include=TRUE, fig.width = 9}
-# ───── Display the first two eigenfunctions ─────────────────────────────
+# ───── Display the second and third eigenfunctions. ─────────────────────────────
 
 # In place of the scale function, the mean curve was subtracted. 
-# This approach facilitates comparison with the variable W as presented in the book, 
-#and ultimately yields an equivalent result.
 centered_states_cum_tf <- states_cum_tf - mean_curve
 
 # FPCA
@@ -263,7 +274,14 @@ covid_pc <- tfb_fpc(centered_states_cum_tf, pve = 0.99)
 # [4]: ( 0,-0.6);( 7,-0.7);(14,-1.5); ...
 # [5]: ( 0,  -4);( 7,  -3);(14,  -5); ...
 #     [....]   (47 not shown)
+```
 
+The `tf_basis` function is used to extract the eigenfunctions, which are
+the fundamental shapes of variation underlying the data. They are the
+functional equivalent of eigenvectors in standard PCA.
+
+```{r , include=TRUE, fig.width = 9}
+# Extract the eigenfunctions from the fPCA result
 basis_functions <- tf_basis(covid_pc, as_tfd = TRUE)
 # tfd[5] on (0,357) based on 52 evaluations each
 # interpolation by tf_approx_linear 
@@ -291,6 +309,8 @@ ggplot() +
   ) +
   theme_classic(base_size = 13)
 ```
+
+FIGURE 2.3: This plot displays the second and third eigenfunctions derived from the Functional Principal Component Analysis (FPCA). These curves represent the fundamental shapes of variation that underlie the data after accounting for the primary mode of variation captured by the first eigenfunction
 
 #### Reconstruction of the original data
 
@@ -346,3 +366,4 @@ comp_df <- tibble(
   theme_classic(base_size = 14)
 
 ```
+FIGURE 2.4: This plot compares the All-cause excess mortality (solid lines) with the curves reconstructed using a limited number of functional principal components (dashed lines). The reconstruction uses the first few components that explain 90% of the variance, demonstrating the effectiveness of FPCA in approximating the original data with fewer dimensions.
