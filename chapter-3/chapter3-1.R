@@ -13,35 +13,27 @@ library(patchwork)
 # ───────────── Data ───────────────────
 
 df_subj <- read_rds(here::here("data","nhanes_fda_with_r.rds"))
-df_subj
+
 
 # ─── Data Preparation ───────────────────
 
 # filter out participants 80+ and younger than 5
-df_subj <-
-  df_subj %>% 
+df_subj <-df_subj %>% 
   filter(age >= 5, age < 80)
 
-df_subj
 
 ## Do fPCA on the subject-average MIMS profiles
 MIMS_mat <- unclass(df_subj$MIMS)
 
-MIMS_mat
-
 fpca_MIMS_subj <- fpca.face(MIMS_mat)
-fpca_MIMS_subj
 
 ## Do PCA on the subject-average MIMS profiles
 # subtract column (minute) means to center the "varianbles"
-MIMS_mn     <- colMeans(MIMS_mat)
-MIMS_mn
+MIMS_mn <- colMeans(MIMS_mat)
 MIMS_mat_cn <- sweep(MIMS_mat, MARGIN=2, STATS=MIMS_mn, FUN="-")
-MIMS_mat_cn
 
 #I commented this out due to run time but you need to run
 #otherwise nothing works G
-
 svd_MIMS_subj <- svd(MIMS_mat_cn)
 
 
@@ -52,13 +44,13 @@ fpca_tf <- tfd(t(fpca_MIMS_subj$efunctions[,1:4]), arg = 1:1440) %>%
   # we'll call them PC1–PC4 in both panels
   set_names(paste0("PC", 1:4))    
 
-pca_tf  <- tfd(t(-svd_MIMS_subj$v[,1:4]), arg = 1:1440) %>%
+pca_tf <- tfd(t(-svd_MIMS_subj$v[,1:4]), arg = 1:1440) %>%
   set_names(paste0("PC", 1:4))
 
 #build a one‐row‐per‐function tibble:
 fpca_df <- tibble(Method = "fPCA", Component = names(fpca_tf), curve = fpca_tf)
-pca_df  <- tibble(Method = "PCA",  Component = names(pca_tf),  curve = pca_tf)
-pc_df   <- bind_rows(fpca_df, pca_df)
+pca_df <- tibble(Method = "PCA",  Component = names(pca_tf),  curve = pca_tf)
+pc_df <- bind_rows(fpca_df, pca_df)
 
 #facet labels
 method_labeller <- as_labeller(c(

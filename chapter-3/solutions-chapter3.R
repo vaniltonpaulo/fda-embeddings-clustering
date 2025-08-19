@@ -15,13 +15,11 @@ fpca_MIMS_subj
 
 ## Do PCA on the subject-average MIMS profiles
 # subtract column (minute) means to center the "varianbles"
-MIMS_mn     <- colMeans(MIMS_mat)
-MIMS_mn
+MIMS_mn <- colMeans(MIMS_mat)
 MIMS_mat_cn <- sweep(MIMS_mat, MARGIN=2, STATS=MIMS_mn, FUN="-")
-MIMS_mat_cn
-# then do SVD
-#svd_MIMS_subj <- svd(MIMS_mat_cn)
 
+# then do SVD
+svd_MIMS_subj <- svd(MIMS_mat_cn)
 
 
 ## plot the results of PCA vs fpca

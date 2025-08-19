@@ -134,7 +134,7 @@ lines(current_date, V[,2], lwd = 2.5, col = "coral4")
 K0 <- 2
 
 #Reconstruct the de-meaned data using the first K0 right singular vectors
-rec <- SVDofW$u[,1:K0] %*% diag(SVDofW$d[1:K0]) %*% t(V[,1:K0])
+rec <- SVD_of_W$u[,1:K0] %*% diag(SVD_of_W$d[1:K0]) %*% t(V[,1:K0])
 
 #Add the mean to the rank K0 approximation of W
 WK0 <- mW_mat+rec
@@ -163,7 +163,7 @@ for(i in 2:length(emphasize)){
 #Plot the scores on the first and second singular vectors
 
 
-U <- SVDofW$u
+U <- SVD_of_W$u
 plot(U[,1], U[,2], pch = 19, cex = 0.8, 
      xlab = "Scores on first right singular vector",
      ylab = "Scores on second right singular vector", bty = "n")

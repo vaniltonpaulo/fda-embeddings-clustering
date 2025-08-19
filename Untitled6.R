@@ -1,57 +1,29 @@
-#This is  a comparison of fpca.face to refund::fpca2s
-#inspiration: https://cran.r-project.org/web/packages/refund/refund.pdf
-#page 69.Prof.Scheipl is referenced
-
-
-#ncol(MIMS_mat) is  1440
-argvals <- seq(0, 1, length.out = ncol(MIMS_mat))
-
-
-# Run fPCA via two-stage method (refund::fpca2s)
-#    - Stage 1: SVD, Stage 2: smooth right singular vectors
-#    - Provide explicit argvals; override default npc if needed
-default_res <- fpca2s(Y = MIMS_mat, argvals = argvals)
+J <- ncol(MIMS_mat)
+arg01 <- seq(0, 1, length.out = J)
+arg_min <- 0:(J-1)
 n_pc <- 4
-if (default_res$npc < n_pc) {
-  fpca_2s_res <- fpca2s(Y = MIMS_mat, argvals = argvals, npc = n_pc)
-} else {
-  fpca_2s_res <- default_res
-}
 
-#Prepare argument grids for plotting
-arg_face <- 1:ncol(MIMS_mat)
+# Run methods
+fpca_2s_res <- fpca2s(Y = MIMS_mat, argvals = arg01, npc = n_pc)
+# assuming this is fpca.face result:
+# fpca_face_res <- fpca.face(Y = MIMS_mat, argvals = arg01, npc = n_pc)
 
+Phi_face <- fpca_MIMS_subj$efunctions[, 1:n_pc, drop = FALSE]
+Phi_2s   <- fpca_2s_res$efunctions[, 1:n_pc, drop = FALSE]
 
-# Use the same argvals defined above, scaled to minutes
-arg_2s <- argvals * ncol(MIMS_mat)
+# Optional: L2 normalize on [0,1]
+Delta <- 1 / J
+scale_l2 <- function(M) sweep(M, 2, sqrt(colSums(M^2) * Delta), `/`)
+Phi_face <- scale_l2(Phi_face)
+Phi_2s   <- scale_l2(Phi_2s)
 
+# Align signs to face
+for (k in 1:n_pc) if (cor(Phi_2s[,k], Phi_face[,k]) < 0) Phi_2s[,k] <- -Phi_2s[,k]
 
-# ─────────────────── Turn into tfd ─────────────
+# Wrap as tidyfun, same argument grid for both
+pc_face_tf <- tfd(t(Phi_face), arg = arg_min) %>% set_names(paste0("PC", 1:n_pc))
+pc_2s_tf   <- tfd(t(Phi_2s),   arg = arg_min) %>% set_names(paste0("PC", 1:n_pc))
 
-# Lets extract and wrap the first n_pc eigenfunctions as tidyfun obj (that usually works)
-pc_face_tf <- tfd(
-  t(fpca_MIMS_subj$efunctions[, 1:n_pc]),
-  arg = arg_face
-) %>%
-  set_names(paste0("PC", 1:n_pc))
-# tfd[4] on (1,1440) based on 1440 evaluations each
-# interpolation by tf_approx_linear 
-# PC1: (1,-0.004);(2,-0.004);(3,-0.004); ...
-# PC2: (1,  0.03);(2,  0.03);(3,  0.03); ...
-# PC3: (1,  0.03);(2,  0.03);(3,  0.03); ...
-# PC4: (1,  0.03);(2,  0.03);(3,  0.03); ...
-
-pc_2s_tf <- tfd(
-  t(-fpca_2s_res$efunctions[, 1:n_pc]),
-  arg = arg_2s
-) %>%
-  set_names(paste0("PC", 1:n_pc))
-# tfd[4] on (0,1440) based on 1440 evaluations each
-# interpolation by tf_approx_linear 
-# PC1: (0,-0.1);(1,-0.1);(2,-0.1); ...
-# PC2: (0,   1);(1,   1);(2,   1); ...
-# PC3: (0,  -1);(1,  -1);(2,  -1); ...
-# PC4: (0,   1);(1,   1);(2,   1); ...
 
 #combined tibble 
 df_face <- tibble(
