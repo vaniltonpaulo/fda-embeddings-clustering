@@ -4,26 +4,29 @@ library(refund)
 library(tidyfun)    
 
 # --- Data ---
-df_subj <- read_rds(here::here("data","nhanes_fda_with_r.rds")) %>%
+## read in the data (assumes data are in the current working directory)
+df_subj <- read_rds(here::here("data","nhanes_fda_with_r.rds"))
+## filter out participants 80+ and younger than 5
+df_subj <-
+  df_subj %>% 
   filter(age >= 5, age < 80)
 
-# Plain numeric matrix (subjects x 1440 minutes)
-MIMS_mat <- unclass(df_subj$MIMS)  # important for big data to avoid C-stack issues
-
 # --- FPCA via refund::fpca.face ---
-fpca_face <- fpca.face(MIMS_mat)   # returns mu, efunctions, etc.
+MIMS_mat <- unclass(df_subj$MIMS)
+MIMS_mat[1,] - mean(MIMS_mat)
+MIMS_mat - mean(MIMS_mat)
+fpca_MIMS_subj <- fpca.face(MIMS_mat)
 
 # Wrap the first 4 eigenfunctions from fpca.face into a tfd for plotting
-fpca_tf <- tfd(t(fpca_face$efunctions[, 1:4]), arg = 1:1440) %>%
+fpca_tf <- tfd(t(fpca_MIMS_subj$efunctions[, 1:4]), arg = 1:1440) %>%
   set_names(paste0("PC", 1:4))
-
+fpca_tf
 # --- FPCA via tf::tfb_fpc (weighted SVD by default) ---
 # Note: tfb_fpc internally centers and returns mean + FPCs as the basis.
-tfb_fpc_obj <- tfb_fpc(MIMS_mat, arg = 1:1440)  # default pve = 0.995
+tfb_fpc_obj <- tfb_fpc(MIMS_mat)  
 basis_functions <- tf_basis(tfb_fpc_obj, as_tfd = TRUE)  # tfd of [mean, PC1, PC2, ...]
 tfb_tf <- -basis_functions[2:5] %>%                     # skip mean -> take PC1..PC4
   set_names(paste0("PC", 1:4))
-
 
 # --- Assemble plotting data (tidyfun likes a tfd column) ---
 pc_df <- bind_rows(

@@ -3,6 +3,23 @@
 #page 69.Prof.Scheipl is referenced
 
 
+
+
+df_subj <- read_rds(here::here("data","nhanes_fda_with_r.rds"))
+
+
+# ─── Data Preparation ───────────────────
+
+# filter out participants 80+ and younger than 5
+df_subj <-df_subj %>% 
+  filter(age >= 5, age < 80)
+
+
+## Do fPCA on the subject-average MIMS profiles
+MIMS_mat <- unclass(df_subj$MIMS)
+
+fpca_MIMS_subj <- fpca.face(MIMS_mat)
+
 #ncol(MIMS_mat) is  1440
 argvals <- seq(0, 1, length.out = ncol(MIMS_mat))
 

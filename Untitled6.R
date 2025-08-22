@@ -1,3 +1,20 @@
+
+
+df_subj <- read_rds(here::here("data","nhanes_fda_with_r.rds"))
+
+
+# ─── Data Preparation ───────────────────
+
+# filter out participants 80+ and younger than 5
+df_subj <-df_subj %>% 
+  filter(age >= 5, age < 80)
+
+
+## Do fPCA on the subject-average MIMS profiles
+MIMS_mat <- unclass(df_subj$MIMS)
+
+fpca_MIMS_subj <- fpca.face(MIMS_mat)
+
 J <- ncol(MIMS_mat)
 arg01 <- seq(0, 1, length.out = J)
 arg_min <- 0:(J-1)
@@ -22,8 +39,19 @@ for (k in 1:n_pc) if (cor(Phi_2s[,k], Phi_face[,k]) < 0) Phi_2s[,k] <- -Phi_2s[,
 
 # Wrap as tidyfun, same argument grid for both
 pc_face_tf <- tfd(t(Phi_face), arg = arg_min) %>% set_names(paste0("PC", 1:n_pc))
+# tfd[4] on (0,1439) based on 1440 evaluations each
+# interpolation by tf_approx_linear 
+# PC1: (0,-0.1);(1,-0.1);(2,-0.1); ...
+# PC2: (0,   1);(1,   1);(2,   1); ...
+# PC3: (0,   1);(1,   1);(2,   1); ...
+# PC4: (0,   1);(1,   1);(2,   1); ...
 pc_2s_tf   <- tfd(t(Phi_2s),   arg = arg_min) %>% set_names(paste0("PC", 1:n_pc))
-
+# tfd[4] on (0,1439) based on 1440 evaluations each
+# interpolation by tf_approx_linear 
+# PC1: (0,-0.1);(1,-0.1);(2,-0.1); ...
+# PC2: (0,   1);(1,   1);(2,   1); ...
+# PC3: (0,   1);(1,   1);(2,   1); ...
+# PC4: (0,   1);(1,   1);(2,   1); ...
 
 #combined tibble 
 df_face <- tibble(
