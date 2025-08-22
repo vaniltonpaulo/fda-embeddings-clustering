@@ -13,7 +13,7 @@ We are going to use `face.sparse` to fill in for all the missing observations.Th
 \
 Our goal is to use `tfb_fpc` from **`tidyfun`** here using `face.sparse` as the underlying engine for estimating eigenfunctions and their scores.
 
-```{r setup,echo=TRUE,message=FALSE}
+```{r setup, echo = TRUE, message = FALSE}
 # ─ Packages ───────────────────
 #List of required packages
 packages <- c(
@@ -45,169 +45,149 @@ library(face)
 set.seed(53615)
 ```
 
-```{r , include=TRUE}
+```{r load-data, include = TRUE}
 # ─────── Data ──────────────────
-data(cd4)
-```
-
-```{r helpers,echo=TRUE}
-# ───────────── helpers ───────────────────
-tf_cluster_kmeans <- function(score_mat, K) {
-  km <- kmeans(score_mat, centers = K)
-  list(cluster = km$cluster, centers = km$centers)
-}
-
-tf_cluster_hclust <- function(score_mat, method = "ward.D2", K = 3) {
-  hc <- hclust(dist(score_mat), method = method)
-  list(cluster = cutree(hc, k = K), hc = hc)
-}
-
-# centres (matrix rows) -> tidyfun curves on a given grid
-tf_centers_from_scores <- function(centers_mat, arggrid) {
-  tfd(centers_mat, arg = arggrid)
-}
-
-# tidyfun helpers (join + plot)
-tf_join_clusters_tf <- function(pred_tf, cluster_vec) {
-  tibble(
-    id      = seq_along(pred_tf),
-    cluster = factor(cluster_vec),
-    curve   = pred_tf
-  )
-}
-
-tf_plot_clusters_tf <- function(cluster_tbl, centers_tbl) {
-  ggplot() +
-    ## highlight centres
-    geom_spaghetti(
-      data = centers_tbl,
-      aes(y = curve, group = cluster),
-      colour = "black", linewidth = 1
-    ) +
-    geom_spaghetti(
-      data = centers_tbl,
-      aes(y = curve, colour = cluster, group = cluster),
-      linewidth = 1
-    ) +
-    ## individual subjects
-    geom_spaghetti(
-      data = cluster_tbl,
-      aes(y = curve, colour = cluster, group = id),
-      alpha = .15, linewidth = .7
-    ) +
-    scale_color_manual(
-      values = c("darkred", "darkorange", "darkgreen"),
-      name   = "Cluster"
-    ) +
-    labs(
-      x = "Time from seroconversion (months)",
-      y = "Log CD4 counts"
-    ) +
-    theme_minimal(base_size = 14)
-}
-```
-
-```{r , include=TRUE}
 #Load the data
 data(cd4)
 ```
 
-```{r , include=TRUE}
-# ─── Data Transformation ─────────────
-n <- nrow(cd4)
-T <- ncol(cd4)
+```{r helpers,echo=TRUE}
+#─────────── Wrap face::face.sparse for use as FPCA method in tfb_fpc ──────────────────
 
-dat <- data.frame(
-  y       = log(as.vector(t(cd4))),
-  argvals = rep(-18:42,  times = n),
-  subj    = rep(seq_len(n), each = T)
-) |>
-  filter(!is.na(y) & y > 4.5) |>
-  #stable order
-  arrange(subj, argvals)
-# A tibble: 1,877 × 3
- #             y argvals  subj
- #         <dbl>   <int> <int>
- # 1 6.306275287      -9     1
- # 2 6.794586581      -3     1
- # 3 6.487684018       3     1
- # 4 6.622736324      -3     2
- # 5 6.129050210       3     2
- # 6 5.198497031       9     2
- # 7 6.073044534      15     2
+#Purpose:Use tfb_fpc here using face.sparse as the underlying engine for estimating eigenfunctions and their scores.
 
-#Tidyfun object (one function per subject)
-cd4_tf <- tfd(dat, id = "subj", arg = "argvals", value = "y")
-```
+# Define scoring function (simple weighted LS fit)
+# This function was taken from the documentation  of tfb_fpc
+  fpca_scores <- function(data_matrix, efunctions, mean, weights) {
+    w_mat <- matrix(weights, nrow = nrow(data_matrix), ncol = length(weights), byrow = TRUE)
+    w_mat[is.na(data_matrix)] <- 0
+    data_matrix[is.na(data_matrix)] <- 0
+    data_wc <- t((t(data_matrix) - mean) * sqrt(t(w_mat)))
+    t(qr.coef(qr(efunctions), t(data_wc) / sqrt(weights)))
+  }
 
-```{r , include=TRUE}
-# ─── face.sparse wrapper (the required engine)  ────────────────
-face_sparse_wrapper <- function(data, arg, pve = 0.95, ...) {
-  df <- as.data.frame(data, unnest = TRUE) |>
-    rename(y = value, argvals = arg, subj = id) |>
-    filter(!is.na(y)) |>
-    arrange(subj, argvals)
+# Define wrapper for face.sparse:
+fpca_face_sparse_wrapper <- function(data, arg, pve = 0.995, ...) {
+  df <- data.frame(
+    y       = data$value,
+    argvals = data$arg,
+    subj    = data$id
+  )
   
+  # We are going to run face.sparse
   fit <- face.sparse(
-    data             = df,
-    newdata          = df,     
-    argvals.new      = arg,    
-    pve              = pve,
-    calculate.scores = TRUE,
+    data= df,
+    argvals.new = sort(unique(df$argvals)),
+    # We get per-subject FPC scores
+    calculate.scores = TRUE,   
+    pve = pve,
     ...
   )
-  #This will make the estimated eigenfunctions and their scores more acessible
+  
+  # weights for L2-orthonormality & scoring (trapezoid rule on arg grid)
+  arg_new <- fit$argvals.new
+  w <- c( diff(arg_new), 0 ); w <- (w + c(0, diff(arg_new)))/2  # trapezoid Δ_i
+  
   list(
-    mu          = as.numeric(fit$mu.new),              
-    efunctions  = as.matrix(fit$eigenfunctions),       
-    scores      = as.matrix(fit$rand_eff$scores),      
-    npc         = ncol(fit$eigenfunctions),
-    arg         = arg
+    mu = fit$mu.new,                
+    efunctions = fit$eigenfunctions,        
+    scores = fit$rand_eff$scores,       
+    npc = ncol(fit$eigenfunctions),  
+    scoring_function = fpca_scores,    
+    arg = arg_new,                   
+    weights = w                          
   )
 }
 ```
 
-```{r , include=TRUE}
-# fixed grid 
-arg <- -20:40  
 
-fpca_res <- face_sparse_wrapper(cd4_tf, arg = arg)
-# Predicted functions for each subject on 'arg':
-# Pred = mu + scores %*% t(efunctions)
-# scores: n x npc, efunctions: k x npc -> t(efunctions): npc x k
-Pred_mat <- fpca_res$scores %*% t(fpca_res$efunctions)
-# add mean per grid point
-Pred_mat <- sweep(Pred_mat, 2, fpca_res$mu, `+`)  
-pred_tf <-tfb_fpc(Pred_mat,arg)
-## tfb[366] on (-20,40) in basis representation:
-##  using  2 FPCs 
-## [1]: (-20,7);(-19,7);(-18,7); ...
-## [2]: (-20,6);(-19,6);(-18,6); ...
-## [3]: (-20,7);(-19,7);(-18,7); ...
-## [4]: (-20,7);(-19,7);(-18,7); ...
-## [5]: (-20,7);(-19,7);(-18,7); ...
-##     [....]   (361 not shown)
+```{r data-transformation, include = TRUE}
+# ─── Data Transformation ─────────────
+n <- nrow(cd4)
+T <- ncol(cd4)
+
+#Construct a tibble of the data
+data <- tibble(
+  y = log(as.vector(t(cd4))),
+  argvals = rep(-20:40,  times = n),
+  subj = rep(seq_len(n), each = T)
+) |>
+  filter(!is.na(y) & y > 4.5)
+```
+
+
+```{r , include=TRUE}
+# ──── FPCA via tfb_fpc, but using FACE under the hood ──────────────────
+data <- arrange(data, subj, argvals)
+
+fpca_tf <- tfb_fpc(
+  data = data,
+  id = "subj",
+  arg = "argvals",
+  value = "y",
+  method = fpca_face_sparse_wrapper,  
+  pve = .995 
+)
+#  tfb[366] on (-20,40) in basis representation:
+#  using  2 FPCs 
+# 1: (-20,7);(-19,7);(-18,7); ...
+# 2: (-20,6);(-19,7);(-18,7); ...
+# 3: (-20,7);(-19,7);(-18,7); ...
+# 4: (-20,7);(-19,7);(-18,7); ...
+# 5: (-20,7);(-19,7);(-18,7); ...
+#     [....]   (361 not shown)
 ```
 
 Perform clustering on predicted functions
 
-```{r , include=TRUE}
-# ─── K-means on predicted functions (matches original pipeline) ──────────────
+```{r kclust, include = TRUE}
+# ─── Perform clustering of predicted functions from face.sparse   ──────────────
+Pred_mat <- as.matrix(fpca_tf)
+
 set.seed(202200228)
-km_res <- tf_cluster_kmeans(Pred_mat, K = 3)
-
-centers_tf  <- tf_centers_from_scores(km_res$centers, arg)
-centers_tbl <- tibble(cluster = factor(seq_len(nrow(km_res$centers))),
-                      curve   = centers_tf)
-cluster_tbl <- tf_join_clusters_tf(pred_tf, km_res$cluster)
-
+cl_kmeans_CD4 <- kmeans(Pred_mat, centers = 3)
+cl_ind_CD4 <- cl_kmeans_CD4$cluster
+cl_cen_CD4 <- cl_kmeans_CD4$centers
 ```
 
 Visualize the results by plotting the predicted CD4 functional curves alongside their corresponding clusters and the estimated cluster centers.
 
-```{r , include=TRUE,fig.width=9}
-# ─────────────────── Plot ─────────────
-tf_plot_clusters_tf(cluster_tbl, centers_tbl)
+```{r face-sparse-plot, include=TRUE,fig.width=9}
+# ─────────── Plot ─────────────────────
+# keep cluster levels consistent between curves & centers
+curves_tibble <- tibble(
+id = 1:length(fpca_tf), 
+cluster = factor(cl_ind_CD4),
+curve = fpca_tf)
+
+
+centers_tibble <- tibble(
+cluster = factor(1:nrow(cl_cen_CD4)),
+centers = tfd(cl_cen_CD4)
+)
+
+
+cluster_colors <- c("1" = "darkred", "2" = "darkorange", "3" = "darkgreen")
+
+ggplot() +
+  # individual curves
+  geom_spaghetti(
+    data = curves_tibble,
+    aes(y = curve, group = id, color = cluster),alpha = .10
+  ) +
+  geom_spaghetti(
+    data = centers_tibble,
+    aes(y = centers ,color = cluster),alpha = 10
+  )+
+  scale_color_manual(values = cluster_colors) +
+  labs(x = "Time from seroconversion (months)",
+       y = "log CD4 counts") +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 12)
+  )
 
 ```
 
@@ -276,6 +256,62 @@ num_grid <- function(dates, ref = min(dates)) as.numeric(dates - ref)
 
 num_grid_v2 <- function(dates, ref = as.Date("2020-01-01")) as.numeric(dates - ref)
 tnum <- num_grid_v2(current_date)
+
+
+
+tf_cluster_kmeans <- function(score_mat, K) {
+  km <- kmeans(score_mat, centers = K)
+  list(cluster = km$cluster, centers = km$centers)
+}
+
+tf_cluster_hclust <- function(score_mat, method = "ward.D2", K = 3) {
+  hc <- hclust(dist(score_mat), method = method)
+  list(cluster = cutree(hc, k = K), hc = hc)
+}
+
+# centres (matrix rows) -> tidyfun curves on a given grid
+tf_centers_from_scores <- function(centers_mat, arggrid) {
+  tfd(centers_mat, arg = arggrid)
+}
+
+# tidyfun helpers (join + plot)
+tf_join_clusters_tf <- function(pred_tf, cluster_vec) {
+  tibble(
+    id      = seq_along(pred_tf),
+    cluster = factor(cluster_vec),
+    curve   = pred_tf
+  )
+}
+
+tf_plot_clusters_tf <- function(cluster_tbl, centers_tbl) {
+  ggplot() +
+    ## highlight centres
+    geom_spaghetti(
+      data = centers_tbl,
+      aes(y = curve, group = cluster),
+      colour = "black", linewidth = 1
+    ) +
+    geom_spaghetti(
+      data = centers_tbl,
+      aes(y = curve, colour = cluster, group = cluster),
+      linewidth = 1
+    ) +
+    ## individual subjects
+    geom_spaghetti(
+      data = cluster_tbl,
+      aes(y = curve, colour = cluster, group = id),
+      alpha = .15, linewidth = .7
+    ) +
+    scale_color_manual(
+      values = c("darkred", "darkorange", "darkgreen"),
+      name   = "Cluster"
+    ) +
+    labs(
+      x = "Time from seroconversion (months)",
+      y = "Log CD4 counts"
+    ) +
+    theme_minimal(base_size = 14)
+}
 ```
 
 ```{r , include=TRUE,fig.width=9}

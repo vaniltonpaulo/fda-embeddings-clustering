@@ -56,7 +56,7 @@ df_subj <- df_subj %>% filter(age >= 5, age < 80)
 MIMS_mat <- unclass(df_subj$MIMS) 
 ```
 
-```{r , include = FALSE, fig.width = 9}
+```{r , echo = TRUE, results = 'hide', fig.width = 9}
 # ─── fpca.face ───────────────────
 # Do fPCA on the subject-average MIMS profiles
 fpca_MIMS_subj <- fpca.face(MIMS_mat)
@@ -76,7 +76,7 @@ fpca_face_tf <- fpc_face %>%
 ```
 
 
-```{r , include = FALSE, fig.width = 9}
+```{r , echo = TRUE, results = 'hide', fig.width = 9}
 # ─── fpca2s ───────────────────
 argvals <- seq(0, 1, length.out = ncol(MIMS_mat))
 fpca2s_obj <- fpca2s(Y = MIMS_mat, npc = 4, argvals = argvals)
@@ -97,7 +97,7 @@ fpca2s_tf <- fpc_2s %>%
 
 
 
-```{r , include = FALSE, fig.width = 9}
+```{r , echo = TRUE, results = 'hide', fig.width = 9}
 # ─── tfb_fpc ───────────────────
 tfb_fpc_obj <- tfb_fpc(MIMS_mat)  # default is SVD-based + spline smoothing
 basis_functions <- tf_basis(tfb_fpc_obj, as_tfd = TRUE)
