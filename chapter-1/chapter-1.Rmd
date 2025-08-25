@@ -6,57 +6,51 @@ output:
   html_document: default
 ---
 
-This vignette explains the key concepts behind functional data analysis (FDA) using the **`tidyfun`** package, using the COVID-19 U.S mortality dataset.The aim is to show why we make specific choices and what they accomplish. We will follow the Functional Data Analysis with R , and use **`tidyfun`** package to analyze the dataset.The end goal is to produce comprehensive documentation or vignette that not only replicate the analyses but also provide theoretical insights and potential extensions.
-
-Why functional data?
-
-Functional Data Analysis treats data as curves or functions.Each observational unit as a function over a continuum, this could be for example over time and even space. Instead of analyzing separate weekly death counts, we analyze the entire mortality curve over time as a single entity. The weekly mortality data is not simply a collection of numbers.The underlying trend of mortality is a smooth process that is happening continuously, not just in weekly bursts.
-
 # COVID-19 US Mortality Data
 
 #### Weekly all-cause mortality data
 
-We assemble exploratory visualizations for all-cause and COVID-19 weekly mortality data in the US. The all‑cause mortality data spans 222 weeks, from the week ending 14 January 2017 through the week ending 10 April 2021.The Data is sourced from National Center for Health Statistics.The data can be accessed via the `refund` package in R.
+We assemble exploratory visualizations for all-cause and COVID-19 weekly mortality data in the US. The data can be accessed via the `refund` package in R. The all-cause mortality data is the weekly mortality that covers the period from the week ending January 14, 2017, through the week ending April 10, 2021.
 
-The COVID‑19 mortality data consist of the weekly mortality, where COVID‑19 is listed as the underlying cause of death. This spans for 68 weeks, from the week ending 4 of January 2020 to the week ending 17 of April 2021, and is sourced from National Center for Health Statistics.The data can be accessed via the `refund` package in R.
+The COVID-19 mortality data contain weekly mortality, with COVID-19 listed as the underlying cause of death. The data span from the week ending January 4, 2020, to the week ending April 17, 2021, and are available via the `refund` package in R.
 
-We aim to apply functional data analysis methods, implemented via the tidyfun package, to visualize U.S. mortality trends with a focus on the year 2020. The analysis addresses two objectives:
+We use the `tidyfun` package to visualize U.S. mortality trends with a focus on the year 2020. The analysis addresses two objectives:
 
-1.  To visualize all-cause total and excess mortality(mortality in a week in 2020 minus mortality in the coresponding week in 2019).
+1.  To visualize all-cause total and excess mortality(mortality in a week in 2020 minus mortality in the corresponding week in 2019).
 
-2.  To visualize the temporal pattern of the total COVID-19 mortality.
+2.  To visualize total COVID-19 mortality as a function of time.
 
-```{r setup,echo=TRUE,message=FALSE}
+```{r setup,echo = TRUE, message = FALSE}
 # ─ Packages ───────────────────
-#List of required packages
+# List of required packages
 packages <- c(
   "refund",
   "tidyverse",
   "tidyfun"
 )
 
-#Install missing packages
+# Install missing packages
 install_if_missing <- function(pkg) {
   if (!requireNamespace(pkg, quietly = TRUE)) {
     install.packages(pkg)
   }
 }
 
-#Install missing packages
+# Install missing packages
 invisible(lapply(packages, install_if_missing))
 
 
 
-#Load packages
+# Load packages
 library(refund)      
 library(tidyverse)   
 library(tidyfun)     
 
-#For reproducible results
+# For reproducible results
 set.seed(53615)
 ```
 
-```{r load-data, echo=TRUE, results='hide'}
+```{r load-data, echo = TRUE, results = 'hide'}
 # ──── Overview ───────────────────
 data("COVID19", package = "refund") 
 names(COVID19)
@@ -68,35 +62,35 @@ names(COVID19)
 ## [11] "States_CV19_mortality"               "States_CV19_mortality_per_million"
 ```
 
-```{r helpers,echo=TRUE}
+```{r helpers,echo = TRUE}
 # ───────────── helpers ───────────────────
-#Converts calendar dates to numeric values 
-#The tfd requires numeric values and not as dates values.
+# Converts calendar dates to numeric values 
+# The tfd requires numeric values and not as dates values.
 num_grid <- function(dates, ref = min(dates)) as.numeric(dates - ref)
 reference_date <- as.Date("2020-01-01")
 ```
 
 #### Weekly all-cause mortality in the US
 
-```{r data, include=TRUE}
-#Obtain weekly all-cause excess mortality between 2017 to end of 2020 
+```{r data, include = TRUE}
+# Obtain weekly all-cause excess mortality between 2017 to end of 2020 
 counts_state <- COVID19$US_weekly_mort
 date_state <- COVID19$US_weekly_mort_dates
 ```
 
-Visualization of COVID-19 and all-cause mortality
+Visualization of  all-cause mortality between 2017 to end of 2020
 
-```{r data-transformation, include=TRUE}
+```{r data-transformation, include = TRUE}
 # ─── Data Transformation ─────────────
 nat_weekly <- tibble(
   date = date_state,
-#The weekly all-cause death counts  
-#Divide by 1000 to indicate numbers in thousands
+# The weekly all-cause death counts  
+# Divide by 1000 to indicate numbers in thousands
   deaths = counts_state / 1000       
 )
 
 
-#Shaded regions highlighting 2019 (blue) and 2020 (red)
+# Shaded regions highlighting 2019 (blue) and 2020 (red)
 shade <- nat_weekly %>%
   filter(year(date) %in% c(2019, 2020)) %>%
   mutate(
@@ -105,7 +99,7 @@ shade <- nat_weekly %>%
   ) %>%
   group_by(year) %>%
   summarise(
-    #For each year, get the min and max week-index
+# For each year, get the min and max week-index
     xmin = min(day_num),
     xmax = max(day_num),
     .groups = "drop"
@@ -115,25 +109,24 @@ shade <- nat_weekly %>%
     colour = c("blue", "red")
   )
 
-#X-axis year labels at first week of each year
+# X-axis year labels at first week of each year
 year_ticks <- nat_weekly %>%
-#We add two new columns
+# We add two new columns
   mutate(
     year = year(date),
     day_num = num_grid(date)
   ) %>%
   group_by(year) %>%
-  #Within each year, we take the row with the smallest date for the plot
+# Within each year, we take the row with the smallest date for the plot
   slice_min(date, n = 1) %>%
   ungroup()
 ```
 
-`tfd` object represent mortality trajectories as continuous curve.It enables interpolation between observed weeks.Using interpolation, more specifically `tf_approx_linear`, turns weekly counts into approximated functions.`tfd` treats the entire time series as a single functional observation and allows functional operations and analysis methods.
 
 ```{r , include=TRUE}
 # ────────── Turn into tfd ─────────────
 nat_weekly_tfd <- tfd(
-#We reshape the deaths into a 1-row matrix so it’s  one curve through 2017 to 2020.
+# We reshape the deaths into a 1-row matrix so it’s  one curve through 2017 to 2020.
   matrix(nat_weekly$deaths, nrow = 1),
   arg = num_grid(nat_weekly$date)
 )
@@ -142,9 +135,8 @@ nat_weekly_tfd <- tfd(
 # [1]: ( 0,61);( 7,59);(14,58); ..
 ```
 
-The `geom_meatballs` its designed specifically for spaghetti plots with points for functional data objects
 
-```{r , include=TRUE}
+```{r weekly-all-cause-plot, include = TRUE}
 # ─────────────────── Plot ─────────────
 
 ggplot() +
@@ -175,15 +167,16 @@ FIGURE 1.1: The weekly death counts in the United States from 14 of January 2017
 
 #### Weekly US COVID-19 mortality data
 
-```{r load-data-weeklycv19, include=TRUE}
+```{r load-data-weeklycv19, include = TRUE}
 # ─── Data ──────────────────
-#Obtain covid-19 associated deaths in the US
+# Obtain covid-19 associated deaths in the US
 cv19_deaths <- COVID19$US_weekly_mort_CV19
 week_diff <- COVID19$US_weekly_excess_mort_2020
 current_date <- COVID19$US_weekly_excess_mort_2020_dates
 ```
 
-```{r data-transformation-weeklycv19,  echo=TRUE}
+The COVID-19 mortality data contain weekly mortality, with COVID-19 listed as the underlying cause of death.
+```{r data-transformation-weeklycv19, echo = TRUE}
 # ─── Turn into tfd ──────────────────
 
 death_tf <- tfd(
@@ -227,35 +220,39 @@ ggplot(excess_tibble, aes(y = curve, colour = death_type)) +
 
 FIGURE 1.2: The total weekly U.S. mortality caused by COVID-19 alongside estimated excess deaths.The blue points represent excess mortality, calculated as the difference between the total deaths in a given week of 2020 and the corresponding week in 2019. The red points indicate the number of deaths each week directly caused by COVID-19.
 
+Total excess deaths before the week ending on 26 december 2020.
 
-Total excess deaths  before the week ending on 26 december 2020.
-```{r , include=TRUE}
+```{r total-excess-calculation, include = TRUE}
 cumsum(death_tf$week_diff)[52]
 ```
-COVID-19 deaths  before the week ending on on 26 december 2020.
-```{r , include=TRUE}
+
+COVID-19 deaths before the week ending on on 26 december 2020.
+
+```{r cv-calculation, include = TRUE}
 cumsum(death_tf$cv19_deaths)[52]
 ```
-There are 35.9% more excess deaths than COVID-19 deaths in this timeframe.
+
+There are 35.9% more excess deaths than COVID-19 deaths before 26 December 2020.
 
 #### Plot of all-cause cumulative excess data
 
 Plot the all-cause US excess mortality data for year 2020.
 
-```{r load-data-all-cause, include=TRUE}
+```{r load-data-all-cause, include = TRUE}
 # ── Data ───────────────────
 new_states <- COVID19$US_states_names
 state_population <- COVID19$US_states_population
 states_excess <- COVID19$States_excess_mortality
 ```
 
-```{r data-transformation-all-cause, include=TRUE}
+We highlight the following states: New Jersey (green), Louisiana (red), California (plum), Maryland (blue), and Texas (salmon).
+```{r data-transformation-all-cause, include = TRUE}
 # ── Data Transformation ───────────────────
 
-#Normalize to rate per 1 million people
+# Normalize to rate per 1 million people
 rate_mat <- sweep(states_excess, 1, state_population / 1e6, "/")
-#Row by row , and replace each row with its cumulative sum.
-#We transpose it back so that rows = states, columns = weeks again.
+# Row by row , and replace each row with its cumulative sum.
+# We transpose it back so that rows = states, columns = weeks again.
 cum_mat <- t(apply(rate_mat, 1, cumsum))
 
 # ────────────── Turn into tfd ──────────────────
@@ -278,7 +275,6 @@ state_df <- tibble(
   state = new_states,
   curve = state_tf
 )
-
 # A tibble: 52 × 2
 #    state                                                   curve
 #    <chr>                                               <tfd_reg>
@@ -329,15 +325,16 @@ FIGURE 1.3: Each U.S. state,the lines track the cumulative weekly all-cause exce
 
 #### Plot of COVID-19 cumulative data
 
-```{r load-data-cum, include=TRUE}
+```{r load-data-cum, include = TRUE}
 # ── Data ────────────
 states_CV19_mort <- COVID19$States_CV19_mortality
-
 ```
 
-```{r data-transformation-cum, include=TRUE}
+```{r data-transformation-cum, include = TRUE}
 # ── Data Transformation ───────────────────
+# Each row of the mortality data is divided by the corresponding state's population (in millions)
 per_mil_mat <- sweep(states_CV19_mort, 1, state_population / 1e6, "/")
+# Cumulative sum of deaths per million over time for each state
 cum_covid <- t(apply(per_mil_mat, 1, function(x) cumsum(replace_na(x, 0))))
 
 # ────────────── Turn into tfd ──────────────────
