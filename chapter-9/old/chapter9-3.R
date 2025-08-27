@@ -2,29 +2,22 @@
 
 
 # Compute distances and cluster as before
-dist_matrix <- stats::dist(Wd)^2
+dist_matrix <- dist(Wd[,])^2
 hc <- hclust(dist_matrix, method = "ward.D2")
-
-# Build a palette‐generating function from the book( exact hex codes)
-base_cols <- c("#E69A8DFF", "#F6D55C", "#2A9D8F", "#5F4B8BFF", "#ee7600")
-my_pal_fun <- colorRampPalette(base_cols)
-
-#generate exactly k = 5 colors
-k_clusters  <- 5
-cluster_cols <- my_pal_fun(k_clusters)
 
 # ─── plot  ───────────
 fviz_dend(hc,
-          k          = k_clusters,
-          rect       = TRUE,        # draw cluster rectangles
-          rect_fill  = TRUE,        # fill them
-          palette    = cluster_cols,# YOUR custom palette here
-          lwd        = 1.5,         # line width
-          cex        = 0.5,         # label size
-          main       = "Hierarchical Clustering Dendrogram",
-          xlab       = "Observations",
-          ylab       = "Distance (Ward D2)",
-          ggtheme    = theme_minimal())+scale_y_continuous(labels = function(x) {
+          k = 5,
+          rect = TRUE,  
+          rect_fill  = FALSE, 
+          k_colors = c("#E69A8DFF", "#F6D55C", "#2A9D8F", "#5F4B8BFF", "#ee7600"),
+          lwd = 1,         
+          cex = 0.5,         
+          main = "Hierarchical clustering on the square Euclidian distances",
+          xlab = "Observations",
+          ylab = "Distance (Ward.D2)",
+          ggtheme = theme_minimal())+
+  scale_y_continuous(labels = function(x) {
             ifelse(x == 0, "0", paste0(scales::comma(x/1000), "K"))
           })
 
@@ -36,10 +29,13 @@ fviz_dend(hc,
 # ─── Hierarchical clustering ────────────────────
 rownames(Wd)  <- states
 hc <- hclust(dist(Wd)^2, method = "ward.D2")
+hc
 # the 52 states in dendrogram order
-state_order    <- rownames(Wd)[hc$order] 
+state_order <- rownames(Wd)[hc$order] 
+state_order
 # for each state, its position in that order
-row_order_vec  <- match(states, state_order)        
+row_order_vec  <- match(states, state_order)
+row_order_vec
 
 # ─── Build tidyfun tibble ───────────────────────────────────────────────────
 #this results in a tibble where each state has its own curve
@@ -124,16 +120,18 @@ head(data.frame(
 
 ##  ─── US MAP PLOT ──────────────────────
 
-
+hc
 cut_wardd2 <- cutree(hc, k = 5)
+cut_wardd2
 
 # Get the order of clusters as they appear in the dendrogram (left to right)
 dend_order <- hc$order
 cluster_first_appearance <- sapply(1:5, function(k) {
   which(dend_order %in% which(cut_wardd2 == k))[1]
 })
+dend_order
 cluster_reorder <- rank(cluster_first_appearance)
-
+cluster_reorder
 # Relabel clusters based on dendrogram order
 relabeled_clusters <- cluster_reorder[cut_wardd2]
 
@@ -146,11 +144,13 @@ state_cluster <- data.frame(
   cluster = relabeled_clusters,
   cluster_name = cluster_names[relabeled_clusters]
 )
+state_cluster
 
 data_cluster <- statepop %>%
   left_join(state_cluster, by = "full") %>%
   select(fips, cluster, cluster_name) %>%
   mutate(cluster = as.factor(cluster))
+data_cluster
 
 plot_usmap(regions = "states", data = data_cluster, values = "cluster") +
   scale_fill_manual(
