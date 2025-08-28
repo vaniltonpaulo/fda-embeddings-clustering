@@ -628,7 +628,7 @@ fviz_dend(hc,
 
 
 
-```{r , include=TRUE}
+```{r , include=TRUE, fig.width=7,fig.height=7}
 # ─── Hierarchical clustering ────────────────────
 rownames(Wd) <- states
 
@@ -671,7 +671,7 @@ colors_orig <- viridis::plasma(length(breaks_orig))
 
 gglasagna(
   df_tf,
-  tf    = mortality,
+  tf = mortality,
   order = row_order,
   label = state
 ) +
@@ -695,7 +695,8 @@ gglasagna(
   ) +
   theme_minimal(base_size = 12) +
   theme(
-    axis.text.y      = element_text(size = 6),
+    #axis.text.y = element_text(size = 6),
+    axis.text.x = element_text(size = 6, angle = 90, vjust = 0.5, hjust=1),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank()
   )

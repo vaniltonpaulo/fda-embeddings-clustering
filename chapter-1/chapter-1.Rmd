@@ -90,8 +90,8 @@ nat_weekly <- tibble(
 )
 
 
-# Shaded regions highlighting 2019 (blue) and 2020 (red)
-shade <- nat_weekly %>%
+# shaded regions highlighting 2019 (blue) and 2020 (red)
+highlight_years <- nat_weekly %>%
   filter(year(date) %in% c(2019, 2020)) %>%
   mutate(
     year = year(date),
@@ -141,7 +141,7 @@ nat_weekly_tfd <- tfd(
 
 ggplot() +
   geom_rect(
-    data = shade,
+    data = highlight_years,
     aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf, fill = colour),
     inherit.aes = FALSE, alpha = 0.15
   ) +
@@ -179,7 +179,7 @@ The COVID-19 mortality data contain weekly mortality, with COVID-19 listed as th
 ```{r data-transformation-weeklycv19, echo = TRUE}
 # ─── Turn into tfd ──────────────────
 
-death_tf <- tfd(
+deaths_tfd_combined <- tfd(
   rbind(week_diff, cv19_deaths),
   arg = num_grid(current_date)
 )
@@ -192,7 +192,7 @@ death_tf <- tfd(
 
 excess_tibble <- tibble(
   death_type = c("All-cause excess", "COVID-19"),
-  curve = death_tf
+  curve = deaths_tfd_combined
 )
 # A tibble: 2 × 2
 #   death_type                                         curve
@@ -223,13 +223,13 @@ FIGURE 1.2: The total weekly U.S. mortality caused by COVID-19 alongside estimat
 Total excess deaths before the week ending on 26 december 2020.
 
 ```{r total-excess-calculation, include = TRUE}
-cumsum(death_tf$week_diff)[52]
+cumsum(deaths_tfd_combined$week_diff)[52]
 ```
 
 COVID-19 deaths before the week ending on on 26 december 2020.
 
 ```{r cv-calculation, include = TRUE}
-cumsum(death_tf$cv19_deaths)[52]
+cumsum(deaths_tfd_combined$cv19_deaths)[52]
 ```
 
 There are 35.9% more excess deaths than COVID-19 deaths before 26 December 2020.
@@ -339,7 +339,7 @@ cum_covid <- t(apply(per_mil_mat, 1, function(x) cumsum(replace_na(x, 0))))
 
 # ────────────── Turn into tfd ──────────────────
 
-covid_tf <- tfd(cum_covid, arg = num_grid(current_date))
+state_covid_tfd <- tfd(cum_covid, arg = num_grid(current_date))
 # tfd[52] on (0,357) based on 52 evaluations each
 # interpolation by tf_approx_linear 
 # [1]: ( 0,0);( 7,0);(14,0); ...
@@ -352,7 +352,7 @@ covid_tf <- tfd(cum_covid, arg = num_grid(current_date))
 # ── Data Transformation ───────────────────
 covid_df <- tibble(
   state = new_states,
-  curve = covid_tf
+  curve = state_covid_tfd
 )
 # A tibble: 52 × 2
 #    state                                          curve

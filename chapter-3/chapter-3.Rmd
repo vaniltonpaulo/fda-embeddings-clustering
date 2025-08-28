@@ -187,15 +187,15 @@ df_plt_ind <- expand.grid(
   sind = sind,
   id   = 1:n_plt,
   high = c("low","high"),
-  PC   = paste0("PC ", 1:K),
+  PC = paste0("PC ", 1:K),
   stringsAsFactors = FALSE
 ) %>% 
   mutate(high = factor(high, levels = c("low","high")))
 
 df_plt_ind_mu <- expand.grid(
   sind  = sind,
-  high  = c("low","high"),
-  PC    = paste0("PC ", 1:K),
+  high = c("low","high"),
+  PC = paste0("PC ", 1:K),
   value = NA,
   stringsAsFactors = FALSE
 ) %>% 
@@ -256,14 +256,14 @@ mu_tf <- df_plt_ind_mu %>%
 ggplot() +
   # thin & transparent individual curves
   geom_spaghetti(
-    data      = ind_tf,
+    data = ind_tf,
     aes(y = curve, color = high),  # Use 'y' instead of 'tf'
     linewidth = 0.5,
-    alpha     = 0.4
+    alpha = 0.4
   ) +
   # thick & opaque mean curves
   geom_spaghetti(
-    data      = mu_tf,
+    data = mu_tf,
     aes(y = curve, color = high),  # Use 'y' instead of 'tf'
     linewidth = 2
   ) +
@@ -274,8 +274,8 @@ ggplot() +
     expand = c(0, 0)
   )+
   labs(
-    x     = "Time of Day",
-    y     = expression("MIMS: " * W[i](s)),
+    x  = "Time of Day",
+    y = expression("MIMS: " * W[i](s)),
     color = "Group"
   ) +
   scale_color_manual(
@@ -284,12 +284,12 @@ ggplot() +
   ) +
   theme_minimal(base_size = 16) +
   theme(
-    panel.spacing    = unit(0.8, "cm"),
-    panel.grid       = element_blank(),
-    axis.line        = element_line(linewidth = 1),
-    axis.ticks       = element_line(linewidth = 1),
-    strip.text       = element_text(face = "bold", size = 16, hjust = 0),
-    legend.position  = "bottom",
+    panel.spacing = unit(0.8, "cm"),
+    panel.grid = element_blank(),
+    axis.line  = element_line(linewidth = 1),
+    axis.ticks = element_line(linewidth = 1),
+    strip.text = element_text(face = "bold", size = 16, hjust = 0),
+    legend.position = "bottom",
     legend.background = element_blank()
   )
 
