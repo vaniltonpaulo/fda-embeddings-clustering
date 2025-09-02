@@ -1,11 +1,14 @@
 ---
-title: "Chapter 9 - Clustering of Functional Data"
+title: "Chapter 9 "
 author: "Vanilton Paulo"
 date: "2025-08-17"
 output: html_document
 ---
 
-# Clustering Sparse CD4 Counts Data
+# Clustering of Functional Data
+
+
+## Clustering Sparse CD4 Counts Data
 
 CD4 immune cells are often collected from a person at irregular intervals.They are not always available for every person at every time point hence sparse observations. When data is sparse, you can not just connect the dots to form a smooth curve for each person because there aren't simply enough points. This makes direct clustering (grouping similar curves together) impossible.
 
@@ -15,7 +18,7 @@ Our goal is to use `tfb_fpc` from **`tidyfun`** here using `face.sparse` as the 
 
 ```{r setup, echo = TRUE, message = FALSE}
 # ─ Packages ───────────────────
-#List of required packages
+# List of required packages
 packages <- c(
   "refund",
   "tidyverse",
@@ -23,25 +26,25 @@ packages <- c(
   "face"
 )
 
-#Install missing packages
+# Install missing packages
 install_if_missing <- function(pkg) {
   if (!requireNamespace(pkg, quietly = TRUE)) {
     install.packages(pkg)
   }
 }
 
-#Install missing packages
+# Install missing packages
 invisible(lapply(packages, install_if_missing))
 
 
 
-#Load packages
+# Load packages
 library(refund)      
 library(tidyverse)   
 library(tidyfun)     
 library(face)
 
-#For reproducible results
+# For reproducible results
 set.seed(53615)
 ```
 
@@ -51,7 +54,7 @@ set.seed(53615)
 data(cd4)
 ```
 
-```{r helpers,echo=TRUE}
+```{r motor, echo = TRUE}
 #─────────── Wrap face::face.sparse for use as FPCA method in tfb_fpc ──────────────────
 
 #Purpose:Use tfb_fpc here using face.sparse as the underlying engine for estimating eigenfunctions and their scores.
@@ -66,7 +69,7 @@ data(cd4)
     t(qr.coef(qr(efunctions), t(data_wc) / sqrt(weights)))
   }
 
-# Define wrapper for face.sparse:
+# Define wrapper for face.sparse
 fpca_face_sparse_wrapper <- function(data, arg, pve = 0.995, ...) {
   df <- data.frame(
     y       = data$value,
@@ -106,7 +109,7 @@ fpca_face_sparse_wrapper <- function(data, arg, pve = 0.995, ...) {
 n <- nrow(cd4)
 T <- ncol(cd4)
 
-#Construct a tibble of the data
+# Construct a tibble of the data
 data <- tibble(
   y = log(as.vector(t(cd4))),
   argvals = rep(-20:40,  times = n),
@@ -116,7 +119,7 @@ data <- tibble(
 ```
 
 
-```{r , include=TRUE}
+```{r fpca-tfb, include = TRUE}
 # ──── FPCA via tfb_fpc, but using FACE under the hood ──────────────────
 data <- arrange(data, subj, argvals)
 
@@ -152,7 +155,7 @@ cl_cen_CD4 <- cl_kmeans_CD4$centers
 
 Visualize the results by plotting the predicted CD4 functional curves alongside their corresponding clusters and the estimated cluster centers.
 
-```{r face-sparse-plot, include=TRUE,fig.width=9}
+```{r face-sparse-plot, include = TRUE, fig.width = 9}
 # ─────────── Plot ─────────────────────
 # keep cluster levels consistent between curves & centers
 curves_tibble <- tibble(
@@ -169,8 +172,7 @@ centers = tfd(cl_cen_CD4)
 
 cluster_colors <- c("1" = "darkred", "2" = "darkorange", "3" = "darkgreen")
 
-x <- ggplot() +
-  # individual curves
+ ggplot() +
   geom_spaghetti(
     data = curves_tibble,
     aes(y = curve, group = id, color = cluster),alpha = .10
@@ -188,12 +190,10 @@ x <- ggplot() +
     axis.text = element_text(size = 12),
     axis.title = element_text(size = 12)
   )
-ggsave("figure4-12.png",x, width = 8, height = 6, dpi = 720)
-
 ```
 
 
-```{r , echo=TRUE,message=FALSE}
+```{r comparison-to-solu, echo = TRUE, message = FALSE}
 # Results from my custom wrapper
 #  tfb[366] on (-20,40) in basis representation:
 #  using  2 FPCs 
@@ -205,7 +205,7 @@ ggsave("figure4-12.png",x, width = 8, height = 6, dpi = 720)
 #     [....]   (361 not shown)
 
 
-# Results from the solution into a tfd object after building the plot
+# Results from the solution in book turned into a tfd object after building the plot
 # > tfd(Pred_mat, arg = seq)
 # tfd[366] on (-20,40) based on 61 evaluations each
 # interpolation by tf_approx_linear 
@@ -219,12 +219,14 @@ ggsave("figure4-12.png",x, width = 8, height = 6, dpi = 720)
 
 ```
 
+We can see from this panel, that although 2 FPCs comes very close to the solution in the textbook. 2 FPCs were enough to explain 99.5% of the variability.
+
 
 # US all-cause excess and Covid-19 mortality
 
-```{r , echo=TRUE,message=FALSE}
+```{r setup-cv, echo = TRUE, message = FALSE}
 # ─ Packages ───────────────────
-#List of required packages
+# List of required packages
 packages <- c(
   "refund",
   "tidyverse",
@@ -237,14 +239,14 @@ packages <- c(
   "mclust"
 )
 
-#Install missing packages
+# Install missing packages
 install_if_missing <- function(pkg) {
   if (!requireNamespace(pkg, quietly = TRUE)) {
     install.packages(pkg)
   }
 }
 
-#Install missing packages
+# Install missing packages
 invisible(lapply(packages, install_if_missing))
 
 library(refund)    
@@ -258,7 +260,7 @@ library(factoextra)
 library(mclust)
 ```
 
-```{r ,  echo=TRUE, results='hide'}
+```{r load-data-cv,  echo=TRUE, results='hide'}
 # ─── Data ────────────────────────────
 #Load data
 data("COVID19", package = "refund")
@@ -274,13 +276,12 @@ states <- COVID19$US_states_names
 current_date <- COVID19$US_weekly_excess_mort_2020_dates
 Wd <- COVID19$States_excess_mortality_per_million
 reference_date <- as.Date("2020-01-01")
-
 ```
 
-```{r , include=TRUE}
+```{r helpers, include=TRUE}
 # ──helpers───────────────────
-#Converts calendar dates to numeric values 
-#The tfd requires numeric values and not as dates values.
+# Converts calendar dates to numeric values 
+# The tfd requires numeric values and not as dates values.
 num_grid <- function(dates, ref = min(dates)) as.numeric(dates - ref)
 
 num_grid_v2 <- function(dates, ref = as.Date("2020-01-01")) as.numeric(dates - ref)
@@ -343,12 +344,12 @@ tf_plot_clusters_tf <- function(cluster_tbl, centers_tbl) {
 }
 ```
 
-```{r , include=TRUE,fig.width=9}
+```{r data-transformation-cv, include=TRUE,fig.width=9}
 # ───Data Transformation ─────────────
-#Organize highlighted the states and their curves
+# Organize highlighted the states and their curves
+
 df_tibble <- tibble(
-  state     = states,
-  #the curves
+  state = states,
   mortality = tfd(Wd, arg = tnum)  
 ) %>%
   mutate(
@@ -359,7 +360,6 @@ df_tibble <- tibble(
     highlight = factor(highlight, levels = c("Other",
                                              "New Jersey","Louisiana","California","Maryland","Texas"))
   )
-
 ## # A tibble: 52 × 3
 ##    state                                                  mortality highlight 
 ##    <chr>                                                  <tfd_reg> <fct>     
@@ -385,9 +385,9 @@ cols <- c(
 )
 
 # ─── Plot ────────────────────────────────
-#Exploratory plots and analyses
+# Exploratory plots and analyses
 
-x <-ggplot(df_tibble) +
+ggplot(df_tibble) +
   geom_spaghetti(aes(y = mortality, colour = highlight, group = state),alpha =0.6) +
   scale_colour_manual(values = cols, name = "States") +
   scale_x_continuous(
@@ -397,11 +397,31 @@ x <-ggplot(df_tibble) +
   ) +
   labs(y = "US states weekly excess deaths / million") +
   theme_minimal()
-ggsave("figure4-1.png",x, width = 8, height = 6, dpi = 720)
-
 ```
 
-Mean and median calculations provide essential summary statistics and are a key part of exploratory data analysis, helping to numerically describe the central tendency of eexcess mortality rate per one million residents for several weeks across 52 states and territories.Thus a complement and help to interpret the visual patterns seen in scatterplots.
+
+The curves are the weekly excess mortality per million residents for each U.S.
+state. Five states receive special focus and are distinguished by color: New Jersey (green),
+Louisiana (red), California (plum), Maryland (blue) and Texas (salmon).All remaining
+states are in grey including Puerto Rico and District of Columbia.
+
+
+Insigths: (i) many states exhibit similar mortality
+curves over extended periods, as indicated by overlapping grey trajectories within the
+interval of -50 to 100 excess deaths per million residents; (ii) New Jersey reached the
+highest mortality peak among all states and territories, with over 300 deaths per million
+residents; (iii) Louisiana and Maryland experienced sharp summer peaks, each exceeding
+50 deaths per million residents; (iv) most states had elevated mortality in December, with
+some states surpassing 100 deaths per million residents.
+
+This visualization shows inherent similarities across curves in functional data analysis, which motivates the application of
+clustering methods.
+
+
+
+
+Mean and median calculations provide essential summary statistics and are a key part of exploratory data analysis, helping to numerically describe the central tendency of e
+excess mortality rate per one million residents for several weeks across 52 states and territories.Thus a complement and help to interpret the visual patterns seen in the plot.
 
 ```{r , include=TRUE}
 # ────────── Summary of Analysis──────────────────────
@@ -465,7 +485,7 @@ For week 40, the five states with the highest excess mortality rates per million
 
 ### K-means clustering of the functional data
 
-```{r , include=TRUE, fig.width = 9, message = FALSE}
+```{r kmeans, include=TRUE, fig.width = 9, message = FALSE}
 # ──────────────── K-means clustering of the functional data ──────────────────────────────
 
 rownames(Wd) <- states
@@ -521,24 +541,31 @@ centers_tbl <- tibble(
 
 ```
 
-```{r , include=TRUE}
+The curves are the weekly excess mortality per million resident for each U.S.
+state and territories. Each state and territory is assigned to one of three groups using
+kmeans clustering: Cluster 1 (red), Cluster 2 (dark green), and Cluster 3 (blue).The
+cluster means are shown as thicker lines, matching the color of their respective clusters.
+
+However, the algorithm is not guaranteed to find a unique solution. Different runs of
+K-means may produce different clusters.So we ran 30 times and picked the best solution.
+```{r k-us-plot, include = TRUE}
 ##  ─── US MAP PLOT ──────────────────────
 
-# color per group as per the book
+# Color per group as per the book
 colset <- c(rgb(1, 0, 0), rgb(0, 100/255, 0), rgb(0, 0, 1))
   
 
-## load state date which contains FIPS code
+# Load state date which contains FIPS code
 data("statepop")
 
-## create a data frame to plot based on the input requirement
+# Create a data frame to plot based on the input requirement
 state_cluster <- data.frame(full = names(cl_ind), cluster = unname(cl_ind))
 data_cluster <- statepop %>%
   left_join(state_cluster, by = "full") %>%
   select(fips, cluster)
 data_cluster$cluster <- as.factor(data_cluster$cluster)
 
-## make the US map
+# Make the US map
  plot_usmap(regions = "states", data = data_cluster, values = "cluster") +
   scale_fill_manual(name = "Cluster", values = colset) +
   labs(title = "") +
@@ -592,8 +619,6 @@ state_plot_df <- tibble(
 
 # ──────────────── US Map with Glyphs ───────────────────────────────
 
-# ──────────────── US Map with Glyphs (Fixed) ───────────────────────────────
-
 # Use usmap's state outlines
 us_map_df <- us_map("states")
 
@@ -608,15 +633,15 @@ us_map_df <- us_map("states")
     x_proj = st_coordinates(.)[,1],
     y_proj = st_coordinates(.)[,2]
   ) %>%
-  st_drop_geometry()  # Remove geometry column to work with regular dataframe
+  st_drop_geometry()  
 
-x <-ggplot() +
+ggplot() +
   # First add the map layer using geom_sf
   geom_sf(data = us_map_df,
           fill = "white",
           color = "black",
           size = 0.2) +
-  # Then add the functional data glyphs using transformed coordinates
+  # Add the functional data glyphs using transformed coordinates
   geom_capellini(data = state_plot_sf,
                  aes(x = x_proj, y = y_proj, tf = curve, colour = cluster),
                  width = 300000, height = 400000, line.linetype = 1) +  # Adjusted size for projected coords
@@ -629,12 +654,22 @@ x <-ggplot() +
        x = "Longitude (°)",  
        ,# or just "Latitude"
        y = "Latitude (°)" )
-ggsave("figure4-4.png",x, width = 8, height = 6, dpi = 720)
 
 ```
 
+The first figure is U.S. map of the three estimated clusters for weekly excess mortality rates in
+2020. Each state and territory is assigned to one of three groups using kmeans clustering:
+Cluster 1 (red), Cluster 2 (dark green), and Cluster 3 (blue).
+
+
+The second map is U.S. map showing the curve of each state and territory with the three es-
+timated clusters for weekly excess mortality rates in 2020. Each state and territory is
+assigned to one of three groups using kmeans clustering: Cluster 1 (red), Cluster 2 (dark
+green), and Cluster 3 (blue).
+
 ### Hierarchical clustering of functional data
-```{r , warning = FALSE, include = TRUE, fig.width = 8, fig.height = 7}
+
+```{r data-process-hc, warning = FALSE, include = TRUE, fig.width = 8, fig.height = 7}
 # ── Hierarchical clustering of functional data ───────────────
 
 # Calculate the matrix of distances
@@ -645,7 +680,7 @@ hc <- hclust(dist_matrix, method = "ward.D2")
 
 # ─── plot  ───────────
 
-dendrogram_plot <- fviz_dend(hc,
+ fviz_dend(hc,
                              k = 5,
                              rect = TRUE,  
                              rect_fill = FALSE, 
@@ -659,14 +694,14 @@ dendrogram_plot <- fviz_dend(hc,
   scale_y_continuous(labels = function(x) {
     ifelse(x == 0, "0", paste0(scales::comma(x/1000), "K"))
   })
-
-# Display the plot
- dendrogram_plot
 ```
 
+Hierarchical clustering of weekly excess mortality rates in 2020 across U.S.
+states and territories using Ward.D2 linkage on squared Euclidean distances. The dendrogram is cut at K = 5 clusters , producing five distinct groups indicated by different colors:
+cluster 1 (salmon), cluster 2 (yellow), cluster 3 (green), cluster 4 (violet) and cluster 5
+(dark orange).
 
-
-```{r , include=TRUE, fig.width=7,fig.height=7}
+```{r heatmap, include=TRUE, fig.width=7,fig.height=7}
 # ─── Hierarchical clustering ────────────────────
 cluster_assignments <- cutree(hc, k = 5)
 
@@ -715,7 +750,7 @@ df_tf <- tibble(
 breaks_orig <- c(-50, seq(-40, 130, by = 1), 200, 250, 300)
 colors_orig <- viridis::plasma(length(breaks_orig))
 
- x <- gglasagna(
+ gglasagna(
   df_tf,
   tf = mortality,
   order = row_order,
@@ -728,7 +763,6 @@ colors_orig <- viridis::plasma(length(breaks_orig))
     limits = c(-50, 300),
     name = "EMR"
   ) +
-  #this was the buggy code
   guides(color = "none") +  
   scale_x_continuous(
     name   = "Weeks starting january 2020",
@@ -760,9 +794,13 @@ df_tf <- tibble(
   row_order = row_order_vec
 )
 ```
+Heatmap of weekly excess mortality rates across U.S. states and two territories
+in the first 52 weeks of 2020.
 
 
-```{r , include=TRUE}
+Insigths: cluster 1 (yellow) represents states with consistently low excess mortality
+rates throughout the year. Cluster 3 (salmon) includes states with mostly high excess mortality rates at the end of the year. Cluster 5 (green) consists of states with excess mortality rates peaking in the summer and at the end of the year.
+```{r hc-map, include = TRUE}
 cut_wardd2 <- cutree(hc, k = 5)
 
 # Get the order of clusters as they appear in the dendrogram (left to right)
@@ -816,8 +854,12 @@ data_cluster <- statepop %>%
   guides(fill = guide_legend(nrow = 1))
 ```
 
+U.S. map of the five estimated clusters for weekly excess mortality rates in 2020
+using Ward.D2 linkage on squared Euclidean distances. Five distinct groups indicated by
+different colors: cluster 1 (salmon), cluster 2 (yellow), cluster 3 (green), cluster 4 (violet)
+and cluster 5 (dark orange).
 
-```{r , include=TRUE}
+```{r glyphmap-hc, include = TRUE}
 # Relabel clusters for consistent order
 dend_order <- hc$order
 cluster_first_appearance <- sapply(1:5, function(k) {
@@ -919,9 +961,16 @@ cluster_colors <- c("#E69A8DFF", "#F6D55C", "#2A9D8F", "#5F4B8BFF", "#ee7600")
   )
 ```
 
+
+U.S. map showing the curve of each state and territory with the five es-
+timated clusters for weekly excess mortality rates in 2020 using Ward.D2 linkage on
+squared Euclidean distances. Five distinct groups indicated by different colors: cluster
+1 (salmon), cluster 2 (yellow), cluster 3 (green), cluster 4 (violet) and cluster 5 (dark
+orange).
+
 ### Distributional clustering
 
-```{r , include=TRUE}
+```{r db-cl, include=TRUE}
 # ─── Distributional clustering ───────────────────────────────────────────────────
 
 # Set color palette
@@ -974,8 +1023,10 @@ par(mar = c(4, 4, 1, 1))
 
 ```
 
-
-```{r , include=TRUE}
+U.S. map of the four estimated clusters for weekly excess mortality rates in
+2020 using Gaussian mixture model. Four distinct groups indicated by different colors:
+cluster 1 (salmon), cluster 2 (yellow), cluster 3 (green), cluster 4 (violet).
+```{r db-plot, include=TRUE}
 library(mclust)
 
 X <- scale(Wd)
@@ -1048,7 +1099,7 @@ state_plot_sf <- state_plot_df %>%
 
 colset <- c("#E69A8DFF", "#F6D55C", "#2A9D8F", "#5F4B8BFF")
 
-x <- ggplot() +
+ggplot() +
   geom_sf(data = us_map_df, fill = "white", color = "black", size = 0.2) +
   
   geom_capellini(
@@ -1070,63 +1121,11 @@ x <- ggplot() +
     plot.title = element_text(hjust = 0.5, face = "bold"),
     plot.subtitle = element_text(hjust = 0.5)
   )
-
-ggsave("figure4-10.png",x, width = 8, height = 6, dpi = 720)
-
 ```
 
 
 
 
-### Clustering functional data
-
-```{r , include=TRUE}
-# ────────── Clustering functional data ────────────────────────────────
-
-# 
-reference_date <- as.Date("2020-01-01")
-# tnum <- as.numeric(current_date - reference_date)
-
-t <- 1:dim(Wd)[2]
-
-#Apply functional PCA using the FACE approach
-results <- fpca.face(Y = Wd, Y.pred = Wd, center = TRUE, argvals = t,
-                     knots = 35, pve = 0.99, var = TRUE)
-
-
-# Transpose eigenfunctions to PC x time
-Phi_t <- t(results$efunctions[, 1:3])
-
-
-explained <- results$evalues[1:3] / sum(results$evalues)
-pc_labels <- paste0("PC", 1:3, " (", round(100 * explained, 1), "%)")
-
-# ─── Build tidy tibble( using tfd) ────────────────────────────────
-#At the end we have three curves
-
-pc_df <- tibble(
-  pc = factor(pc_labels, levels = pc_labels),
-  efun = tfd(Phi_t, arg = tnum)
-)
-
-# ─── Plot ────────────────────────────────
-ggplot(pc_df, aes(y = efun, color = pc)) +
-  geom_spaghetti(alpha = 1) +
-  scale_x_continuous(
-    name = "Weeks starting January 2020",
-    breaks = as.numeric(seq(reference_date, as.Date("2021-01-01"), by = "3 months") - reference_date),
-    labels = format(seq(reference_date, as.Date("2021-01-01"), by = "3 months"), "%b %Y")
-  ) +
-  labs(
-    y = "Eigenfunctions",
-    color = NULL
-  ) +
-  theme_classic() +
-  theme(
-    legend.position = "right",
-    legend.text = element_text(size = 12),
-    axis.title = element_text(size = 13),
-    axis.text = element_text(size = 11)
-  )
-
-```
+U.S. map showing the curve of each state and territory with the four estimated clusters for weekly excess mortality rates in 2020 using using Gaussian mixture
+model. Four distinct groups indicated by different colors: cluster 1 (salmon), cluster 2
+(yellow), cluster 3 (green), cluster 4 (violet)

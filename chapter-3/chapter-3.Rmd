@@ -1,10 +1,27 @@
 ---
-title: "chapter 3 - Functional Principal Components Analysis"
+title: "chapter 3"
 author: "Vanilton Paulo"
 date: "2025-08-16"
 output:
   html_document: default
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
+
+# Functional Principal Components Analysis
+
+The National Health and Nutrition Examination Survey (NHANES) is the
+only national survey in the U.S. that combines health interviews,
+dietary assessments, physical exams, and laboratory tests for
+participants of all ages.
+
+In this case study, NHANES 2011-2014 physical activity data is used ,
+filtering for participants aged 5 to 80 who had at least one day of
+accelerometry data, resulting in 11,820 participants.
+
+The primary concern of this chapter is FPCA methods differences in their approaches
+to eigenfunctions and scores estimation. 
 
 ```{r setup, echo = TRUE, message = FALSE}
 # ─Packages───────────────────
@@ -29,39 +46,36 @@ invisible(lapply(packages, install_if_missing))
 
 
 
-#Calling all the packages 
+# Load packages
 library(refund)      
 library(tidyverse)   
 library(tidyfun)
 library(patchwork)
 library(here)
 
-
-
-#For reproducible results
+# For reproducible results
 set.seed(53615)
 ```
 
-
-```{r , include = TRUE}
+```{r load-data, include = TRUE}
 # ─── Load data  ───────────────────
 df_subj <- read_rds(here("data", "nhanes_fda_with_r.rds"))
 ```
 
-
-```{r , include = TRUE, fig.width = 9}
+```{r data-transformation, include = TRUE, fig.width = 9}
 # ─── Data Preparation ───────────────────
-## filter out participants 80+ and younger than 5
+# Filter out participants 80+ and younger than 5
 df_subj <- df_subj %>% filter(age >= 5, age < 80)
 MIMS_mat <- unclass(df_subj$MIMS) 
 ```
 
-```{r , echo = TRUE, results = 'hide', fig.width = 9}
+```{r fpca-face, echo = TRUE, results = 'hide', fig.width = 9}
 # ─── fpca.face ───────────────────
 # Do fPCA on the subject-average MIMS profiles
 fpca_MIMS_subj <- fpca.face(MIMS_mat)
 fpc_face <- tfd(t(fpca_MIMS_subj$efunctions[, 1:4]), arg = 1:1440)
-
+# FACE does not re-scale eigenvectors correctly
+# FACE scaling depends on no. of gridpoints not length of domain,
 tf_integrate(fpc_face^2)
 #[1] 0.9999874 0.9989462 0.9988505 0.9992566
 
@@ -75,13 +89,13 @@ fpca_face_tf <- fpc_face %>%
 # PC4: (1,  0.03);(2,  0.03);(3,  0.03); ...
 ```
 
-
-```{r , echo = TRUE, results = 'hide', fig.width = 9}
+```{r fpca-2s, echo = TRUE, results = 'hide', fig.width = 9}
 # ─── fpca2s ───────────────────
 argvals <- seq(0, 1, length.out = ncol(MIMS_mat))
 fpca2s_obj <- fpca2s(Y = MIMS_mat, npc = 4, argvals = argvals)
 fpc_2s <- tfd(t(fpca2s_obj$efunctions[, 1:4]), arg = seq(1, 1440))
-
+# 2s does not re-scale eigenvectors correctly
+# 2s ignores domain length
 tf_integrate(fpc_2s^2)
 #[1] 1438.940 1437.387 1436.987 1437.529
 
@@ -95,15 +109,13 @@ fpca2s_tf <- fpc_2s %>%
 # PC4: (1, -1);(2, -1);(3, -1); ...
 ```
 
-
-
-```{r , echo = TRUE, results = 'hide', fig.width = 9}
+```{r fpca-basis, echo = TRUE, results = 'hide', fig.width = 9}
 # ─── tfb_fpc ───────────────────
 tfb_fpc_obj <- tfb_fpc(MIMS_mat)  # default is SVD-based + spline smoothing
 basis_functions <- tf_basis(tfb_fpc_obj, as_tfd = TRUE)
 # skip the mean (first function), extract PC1 to PC4
 fpc_tf <- basis_functions[2:5]
-tf_integrate(fpc_tf^2)
+tf_integrate(fpc_tf^2) #orthonormal functions!
 #[1] 1 1 1 1
 
 
@@ -117,8 +129,7 @@ tfb_tf <- -fpc_tf %>%
 # PC4: (1,  0.03);(2,  0.03);(3,  0.03); ...
 ```
 
-
-```{r , include = TRUE, fig.width = 25, fig.height = 9}
+```{r plot, include = TRUE, fig.width = 25, fig.height = 9}
 # ─── Common plot bits ─────────────
 time_breaks <- c(1, 6 * 60, 12 * 60, 18 * 60, 23 * 60)
 time_labels <- c("01:00", "06:00", "12:00", "18:00", "23:00")
@@ -146,28 +157,40 @@ make_pc_plot <- function(dat, title_txt) {
 }
 
 # ─── Build data frames per method ─
-df_face   <- tibble(Component = names(fpca_face_tf), curve = fpca_face_tf)
+df_face <- tibble(Component = names(fpca_face_tf), curve = fpca_face_tf)
 df_fpca2s <- tibble(Component = names(fpca2s_tf),    curve = fpca2s_tf)
-df_tfb    <- tibble(Component = names(tfb_tf),       curve = tfb_tf)
+df_tfb <- tibble(Component = names(tfb_tf),       curve = tfb_tf)
 
 # ─── Three individual plots ───────
-p_face   <- make_pc_plot(df_face,   "(A) fPCA (face)")
+p_face <- make_pc_plot(df_face, "(A) fPCA (face)")
 p_fpca2s <- make_pc_plot(df_fpca2s, "(B) fPCA (fpca2s)")
-p_tfb    <- make_pc_plot(df_tfb,    "(C) fPCA (tfb_fpc)")
+p_tfb <- make_pc_plot(df_tfb,  "(C) fPCA (tfb_fpc)")
 
-# Print individually (e.g., in the console or knit document)
-p_face +p_fpca2s +p_tfb
+
+p_face + p_fpca2s + p_tfb
 ```
 
+First four eigenfunctions estimated using three FPCA approaches applied
+to the NHANES data: (A) FPCA with fast covariance estimation
+(`fpca.face`, left panel), (B) FPCA by SSVD method (`fpca2s`, center
+panel), and (C) `tfb_fpc` (right panel). The principal components are
+color-coded as follows: PC1 (red), PC2 (green), PC3 (blue), and PC4
+(magenta).
+
+Despite some differences, the broad shapes of the eigenfunctions are consistent
+across approaches. This is good since they are aiming to solve the same problem.
 
 
-```{r , include = TRUE, fig.width = 9}
+
+
+Here, we plot the individuals in the bottom and top 10% of scores for the first four PCs. 
+```{r interpretation, include = TRUE, fig.width = 9}
 #─────────────────────────── Goal ──────────────────────────────────────────────────────
 #Interpreting the functional PCs may be challenging, particularly for PCs which explain a relatively 
 #low proportion of variance. One visualization technique is to plot the distribution of curves which 
 #load lowest/highest on a particular PC. 
 
-#Task:Here, we plot the individuals in the bottom and top 10% of scores for the first four PCs. 
+#Task: Here, we plot the individuals in the bottom and top 10% of scores for the first four PCs. 
 
 
 set.seed(1983)
@@ -182,7 +205,7 @@ xinx <- (c(1,6,12,18,23)*60 + 1) / 1440
 xinx_lab <- c("01:00","06:00","12:00","18:00","23:00")
 
 
-## ── Templates with “PC 1” etc. ─────────────────
+## ── Templates with PC 1 etc. ─────────────────
 df_plt_ind <- expand.grid(
   sind = sind,
   id   = 1:n_plt,
@@ -209,18 +232,18 @@ mu_vec <- c()
 ind_vec <- c()
 
 for(k in 1:K) {
-  # 3a) 10th / 90th score cutoffs
+  #  10th / 90th score cutoffs
   sc <- fpca_MIMS_subj$scores[,k]
   q <- quantile(sc, c(0.1, 0.9))
   lo <- which(sc <= q[1])
   hi <- which(sc >  q[2])
   
-  # 3b) group means from *Yhat*
+  # group means from Yhat
   mu_lo <- colMeans(fpca_MIMS_subj$Yhat[lo,  ])
   mu_hi <- colMeans(fpca_MIMS_subj$Yhat[hi,  ])
   mu_vec <- c(mu_vec, mu_lo, mu_hi)
   
-  # 3c) sample n_plt curves from Yhat
+  #  sample n_plt curves from Yhat
   sam_lo <- sample(lo, size = n_plt)
   sam_hi <- sample(hi, size = n_plt)
   ind_lo <- as.vector(t(fpca_MIMS_subj$Yhat[sam_lo, ]))
@@ -250,21 +273,19 @@ mu_tf <- df_plt_ind_mu %>%
 
 # ─────────────────── Plot ─────────────
 #Goal:
-#We can then plot the average and individual curves. We do see the individual curves
-#which load highly on each of the first four PCs do, on average, largely reflect the shapes of the PCs, with this visual effect most strong for the first three PCs.
+# We can then plot the average and individual curves. We do see the individual curves
+# which load highly on each of the first four PCs do, on average, largely reflect the shapes of the PCs, with this visual effect  strongest for the first three PCs.
 
 ggplot() +
-  # thin & transparent individual curves
   geom_spaghetti(
     data = ind_tf,
-    aes(y = curve, color = high),  # Use 'y' instead of 'tf'
+    aes(y = curve, color = high),  
     linewidth = 0.5,
     alpha = 0.4
   ) +
-  # thick & opaque mean curves
   geom_spaghetti(
     data = mu_tf,
-    aes(y = curve, color = high),  # Use 'y' instead of 'tf'
+    aes(y = curve, color = high),  
     linewidth = 2
   ) +
   facet_wrap(~ PC, ncol = 2, scales = "free_y") +
@@ -295,4 +316,18 @@ ggplot() +
 
 ```
 
+Physical activity trajectory of 10 individuals in the top 10 percent of
+scores (thin red line) and their average physical activity trajectory
+(thick red line).Physical activity trajectory of 10 individuals in the
+lowest 10 percent of scores (thin blue line) and their average physical
+activity trajectory (thick blue line).
 
+The top-left panel displays trajectories of 10 individuals in the top 10
+percent of PC1 scores (thin red lines) and their average (thick red
+line), compared with 10 individuals in the bottom 10 percent of PC1
+scores (thin blue lines) and their average (thick blue line). The top 10
+percent group is much more active during the day, while the bottom 10
+percent have lower daytime activity and, in some cases are more active
+at night, specifically past 11 pm. The remaining panels show similar
+contrasts for PC2–PC4. As expected, differences become less pronounced
+for higher-order PCs, since they explain less variability
