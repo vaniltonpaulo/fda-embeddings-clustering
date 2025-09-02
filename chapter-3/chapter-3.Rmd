@@ -156,7 +156,7 @@ p_fpca2s <- make_pc_plot(df_fpca2s, "(B) fPCA (fpca2s)")
 p_tfb    <- make_pc_plot(df_tfb,    "(C) fPCA (tfb_fpc)")
 
 # Print individually (e.g., in the console or knit document)
-p_face +p_tfb +p_fpca2s
+p_face +p_fpca2s +p_tfb
 ```
 
 

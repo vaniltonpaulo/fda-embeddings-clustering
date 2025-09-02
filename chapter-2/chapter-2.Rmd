@@ -10,7 +10,13 @@ editor_options:
 
 # `tfb` FPC-based for US Excess Mortality
 
-```{r setup,echo = TRUE, message = FALSE}
+Here, we demonstrate how the constructor for functional data basis
+representation `tfb_fpc` can serve as an equivalent replacement to the
+SVD-based approach, to visualize and analyze cumulative all-cause excess
+mortality data across 50 states and 2 territories (Puerto Rico and the
+District of Columbia) in the US.
+
+```{r setup, echo = TRUE, message = FALSE}
 # ─ Packages ───────────────────
 # List of required packages
 packages <- c(
@@ -32,20 +38,20 @@ invisible(lapply(packages, install_if_missing))
 
 
 
-#Load packages
+# Load packages
 library(refund)      
 library(tidyverse)   
 library(tidyfun)     
 library(gridExtra)
 
-#For reproducible results
+# For reproducible results
 set.seed(53615)
 ```
 
 ```{r helpers, echo = TRUE}
 # ─────── helpers ───────────────────
-#Converts calendar dates to numeric values 
-#The tfd requires numeric values and not as dates values.
+# Converts calendar dates to numeric values 
+# The tfd requires numeric values and not as dates values.
 num_grid <- function(dates, ref = min(dates)) as.numeric(dates - ref)
 reference_date <- as.Date("2020-01-01")
 ```
@@ -74,7 +80,7 @@ current_date <- COVID19$US_weekly_excess_mort_2020_dates
 Wd <- COVID19$States_excess_mortality_per_million  
 ```
 
-```{r , include = TRUE, fig.width = 10}
+```{r data-transformation-mean, include = TRUE, fig.width = 10}
 # ── Data Transformation ───────────────────
 # Calculate the cumulative excess mortality per million for each U.S. state and territory.
 cum_mat <- t(apply(Wd, 1, cumsum))
@@ -86,6 +92,7 @@ states_cum_tf <- tfd(
   id  = new_states,
   var = "cum_excess"
 )
+
 # tfd[52] on (0,357) based on 52 evaluations each
 # interpolation by tf_approx_linear 
 # [1]: ( 0, 0.8);( 7, 8.3);(14,-6.9); ...
@@ -102,7 +109,7 @@ mean_curve <- mean(states_cum_tf)
 centered_states_cum_tf <- scale(states_cum_tf, scale = FALSE)
 # ── Plot ────────────────
 #Visualize the data for each state and territory (gray solid lines) and the mean (dark red solid line).
-ggplot() +
+ ggplot() +
   geom_spaghetti(aes(y = states_cum_tf),
                  colour = "grey20", alpha = 0.15) +
   geom_spaghetti(aes(y = mean_curve),
@@ -119,19 +126,24 @@ ggplot() +
   theme_classic(base_size = 13)
 ```
 
-FIGURE 2.1: This plot displays the cumulative weekly excess deaths per
-million for all 52 U.S. states and territories (gray lines). The bold
-dark red line represents the mean cumulative excess mortality across all
-states.
+The cumulative excess deaths per million for each U.S. states and
+territories (gray lines). The dark red line represents the mean
+cumulative excess mortality in the US per one million residents.
+
+The mean cumulative excess mortality curve, shown in red, represents the
+average of these states and territories in the US. This allows us to see
+which states’ cumulative excess curves are above or below the national
+average, providing an overview of heterogeneity across states and the
+two territories.
 
 #### Display the de-meaned data
 
-To illustrate the impact of removing the mean from the original data, we
-plot the resulting curves. The following five states are emphasized: New
+The national average curve can be subtracted from each state’s curve,
+yielding centered data. The following five states are emphasized: New
 Jersey (green), Louisiana (red), California (plum), Maryland (blue), and
 Texas (salmon).
 
-```{r , include=TRUE, fig.width= 10}
+```{r de-meaned, include = TRUE, fig.width = 10}
 centered_cum_states_tf_v2 <- tfd(
   t(apply(centered_states_cum_tf, 1, identity)),
   arg = num_grid(current_date),
@@ -147,19 +159,21 @@ centered_cum_states_tf_v2 <- tfd(
 #     [....]   (47 not shown)
 # ── Plot ────────────────
 
+emphasize <- c("New Jersey", "Louisiana", "California", "Maryland", "Texas")
+emph_cols <- c("darkseagreen3", "red", "plum3", "deepskyblue4", "salmon")
+
+
+# Named vector: map state names to colors
+highlight_colors <- setNames(emph_cols, emphasize)
+
 ggplot() +
   geom_spaghetti(aes(y = centered_cum_states_tf_v2),
-                 colour = "grey60", alpha = 0.2, linewidth = 0.5) +
-  geom_spaghetti(aes(y = centered_cum_states_tf_v2[which(new_states == "New Jersey")]),
-                 colour = "darkseagreen3", linewidth = 1.2, alpha = 3) +
-  geom_spaghetti(aes(y = centered_cum_states_tf_v2[which(new_states == "Louisiana")]),
-                 colour = "red", linewidth = 1.2, alpha = 3) +
-  geom_spaghetti(aes(y = centered_cum_states_tf_v2[which(new_states == "California")]),
-                 colour = "plum3", linewidth = 1.2, alpha = 3) +
-  geom_spaghetti(aes(y = centered_cum_states_tf_v2[which(new_states == "Maryland")]),
-                 colour = "deepskyblue4", linewidth = 1.2, alpha = 3) +
-  geom_spaghetti(aes(y = centered_cum_states_tf_v2[which(new_states == "Texas")]),
-                 colour = "salmon", linewidth = 1.2, alpha = 3) +
+                 colour = "grey60", alpha = 0.2,linewidth = 1) +
+  geom_spaghetti(aes(
+    y = centered_cum_states_tf_v2[new_states %in% emphasize],
+    color = new_states[new_states %in% emphasize]  
+  ) ,alpha = 2,linewidth = 1) +
+  scale_color_manual(values = highlight_colors, name = "State") +
   scale_x_continuous(
     name = "Weeks starting January 2020",
     breaks = as.numeric(seq(reference_date, as.Date("2021-01-01"), by = "3 months") - reference_date),
@@ -172,63 +186,16 @@ ggplot() +
   theme_classic(base_size = 13)
 ```
 
-FIGURE 2.2: This plot shows the centered cumulative excess deaths per
-million, which are the deviations from the mean national trend for each
-state. The gray lines represent all states, while five specific states
-are highlighted to emphasize their individual trends: New Jersey (dark
-green), Louisiana (red), California (plum), Maryland (deepskyblue), and
-Texas (salmon).
+Centered cumulative excess deaths per million, obtained after centering
+the data by removing the mean at each time point. The gray lines
+represent all states, while five specific states are highlighted to
+emphasize their individual trends: New Jersey (green), Louisiana (red),
+California (plum), Maryland (blue), and Texas (salmon).
 
-Singular Value Decomposition (`svd`)
-
-For a data matrix $X \in \mathbb{R}^{n\times p}$, $$
-X \;=\; U\,D\,V^\top .
-$$
-
-Where**:**
-
--   $U \in \mathbb{R}^{n\times n}$ — orthogonal; columns are the left
-    singular vectors.
-
--   $D \in \mathbb{R}^{n\times p}$ — diagonal/rectangular with
-    non-negative diagonal entries $d_1 \ge \cdots \ge d_r > 0$ (the
-    singular values; $r=\mathrm{rank}(X)$).
-
--   $V \in \mathbb{R}^{p\times p}$ — orthogonal; columns are the right
-    singular vectors.
-
-Why it’s useful:
-
--   Best low-rank approximation**:** for any $k<r$,
-    $X_k=U_k D_k V_k^\top$ minimizes the reconstruction error
-    (Frobenius/spectral norms).
-
--   Link to PCA: if columns of $X$ are centered, $V_r$ are principal
-    directions and $d_i^2$ are variances explained; $U_r D_r$ are the PC
-    scores.
-
-`tfb_fpc` performs Functional Principal Component Analysis (FPCA) and
-returns a functional data object in FPC basis representation. It's
-specifically designed for functional data analysis.
-
-Default Method: `fpc_wsvd`
-
-The default method, `fpc_wsvd`, uses a weighted SVD tailored to
-functional data.
-
-Key features:
-
--   Weighted orthogonality**.** Using trapezoidal quadrature weights
-    $\Delta_i$ at grid points $t_i$, the eigenfunctions $\phi_j$ are
-    orthonormal with respect to the $L^2$ inner product: $$
-    \int_T \phi_j(t)^2\,dt \;\approx\; \sum_i \Delta_i\,\phi_j(t_i)^2 \;=\; 1,
-    $$ rather than simple Euclidean orthogonality
-    $\sum_i \phi_j(t_i)^2 = 1$.
-
--   Functional orthogonality**.** For $j \neq k$, $$
-    \int_T \phi_j(t)\,\phi_k(t)\,dt \;=\; 0 
-    \;\approx\; \sum_i \Delta_i\,\phi_j(t_i)\,\phi_k(t_i) \;=\; 0.
-    $$
+The visualization above highlights substantial heterogeneity among
+states. Some states, such as New Jersey and Louisiana, display
+above-centered cumulative excess mortality. Others, such as California,
+show below-centered cumulative excess mortality.
 
 Why `svd` and `tfb_fpc` are they equivalent?
 
@@ -255,21 +222,13 @@ Furthermore
 
 ------------------------------------------------------------------------
 
-The `tfb_fpc` function applies functional principal component analysis
-(fPCA) by treating each observation as a smooth function rather than a
-vector of discrete values. It identifies a set of empirical basis
-functions using a weighted singular value decomposition (SVD) and
-represents each function as a combination of these basis functions and
-their corresponding scores. These basis functions and scores are
-equivalents of the principal components and scores obtained from SVD.
-
 #### Display the second and third eigenfunctions.
 
 The `tfb_fpc` function is then applied to the centered data to perform
 fPCA. The argument `pve = 0.995` instructs the function to select enough
 principal components to explain 99.5% of the total variance in the data.
 
-```{r , include=TRUE, fig.width = 9}
+```{r eigen, include = TRUE, fig.width = 9}
 # ───── Display the second and third eigenfunctions. ─────────────────────────────
 
 # In place of the scale function, the mean curve was subtracted. 
@@ -286,10 +245,10 @@ covid_fpc <- tfb_fpc(centered_states_cum_tf)
 #     [....]   (47 not shown)
 ```
 
-The `tf_basis` is used to extract the basis functions from a tfb_fpc
+The `tf_basis` is used to extract the basis functions from a `tfb_fpc`
 object
 
-```{r , include=TRUE, fig.width = 9}
+```{r basis-extract, include = TRUE, fig.width = 9}
 # Extract the eigenfunctions from the fPCA result
 basis_functions <- tf_basis(covid_fpc, as_tfd = TRUE)
 # tfd[6] on (0,357) based on 52 evaluations each
@@ -320,20 +279,18 @@ ggplot() +
   theme_classic(base_size = 13)
 ```
 
-FIGURE 2.3: This plot displays the second and third eigenfunctions
-derived from the Functional Principal Component Analysis (FPCA). These
-curves represent the fundamental shapes of variation that underlie the
-data after accounting for the primary mode of variation captured by the
-first eigenfunction
+The second and third eigenfunctions derived from the Functional
+Principal Component Analysis (FPCA) for all-cause weekly excess US
+mortality data in 2020. The second eigenfunction in light coral and
+third eigenfunction in dark coral.
 
 #### Reconstruction of the original data
 
-```{r , include=TRUE, fig.width=9}
+```{r reconstruction, include = TRUE, fig.width = 9}
 # ──────────────────── Compare the real and reconstructed data ──────────────────────
 
-#Uses functional principal components
+# Uses functional principal components
 wsvd_fpc <- tfb_fpc(states_cum_tf, pve = .9)
-
 # tfb[52] on (0,357) in basis representation:
 #  using  2 FPCs 
 # [1]: ( 0, 9);( 7,15);(14,22); ...
@@ -346,10 +303,7 @@ wsvd_fpc <- tfb_fpc(states_cum_tf, pve = .9)
 
 #### Compare the real and reconstructed data
 
-```{r , include=TRUE, fig.width=9}
-emphasize <- c("New Jersey", "Louisiana", "California", "Maryland", "Texas")
-emph_cols <- c("plum3","red", "deepskyblue4","darkseagreen3", "salmon")
-
+```{r recon-plot, include = TRUE, fig.width = 9}
 # Create comparison data frame
 reconstruction_df <- tibble(
   state = new_states,
@@ -368,8 +322,12 @@ reconstruction_df <- tibble(
 ## 5 Texas      [5]: ( 0, 1);( 7,11);(14,14); ... [5]: ( 0, 7);( 7,13);(14,19); ...
 # ───── Plot ────────────────────────────────────
 
+emphasize <- c("New Jersey", "Louisiana", "California", "Maryland", "Texas")
+emph_cols <- c("plum3","red", "deepskyblue4","darkseagreen3", "salmon")
+
+
 #Original vs tfb_fpc 
- ggplot(reconstruction_df) +
+ggplot(reconstruction_df) +
   geom_spaghetti(aes(y = original_curve, color = state),
                  linewidth = 2, alpha = 0.8) +
   geom_spaghetti(aes(y = recon_tfb, color = state),
@@ -389,9 +347,7 @@ reconstruction_df <- tibble(
 
 ```
 
-FIGURE 2.4: This plot compares the All-cause excess mortality (solid
-lines) with the curves reconstructed using a limited number of
-functional principal components (dashed lines). The reconstruction uses
-the first few components that explain 90% of the variance, demonstrating
-the effectiveness of FPCA in approximating the original data with fewer
-dimensions.
+All-cause excess mortality (solid lines) and predicted/reconstructed
+curves based on 2 FPCs (dashed lines) for five specific states: New
+Jersey (green), Louisiana (red), California (plum), Maryland (blue), and
+Texas (salmon).

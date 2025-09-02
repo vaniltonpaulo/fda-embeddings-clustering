@@ -92,7 +92,7 @@ for(i in 1:n){ #Begin loop over study participants
 #Conduct clustering of predicted functions from fpca sparse
 
 
-
+tfb_fpc(Pred_mat)[2,]
 set.seed(202200228)
 cl_kmeans_CD4 <- kmeans(Pred_mat, centers = 3)
 cl_kmeans_CD4
@@ -111,6 +111,8 @@ plot(NULL, xlim = c(-20, 40), ylim = c(5, 8), xlab = "Time from seroconversion (
 for(i in 1:n){
   lines(seq, Pred_mat[i,], col = colset[cl_ind_CD4[i]])
 }
+
+tfd(Pred_mat, arg = seq)
 
 lines(seq, cl_cen_CD4[1,], col = "darkred", type = "l", lwd = 3)
 lines(seq, cl_cen_CD4[2,], col = "darkorange", lwd = 3)

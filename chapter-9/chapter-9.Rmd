@@ -169,7 +169,7 @@ centers = tfd(cl_cen_CD4)
 
 cluster_colors <- c("1" = "darkred", "2" = "darkorange", "3" = "darkgreen")
 
-ggplot() +
+x <- ggplot() +
   # individual curves
   geom_spaghetti(
     data = curves_tibble,
@@ -188,8 +188,37 @@ ggplot() +
     axis.text = element_text(size = 12),
     axis.title = element_text(size = 12)
   )
+ggsave("figure4-12.png",x, width = 8, height = 6, dpi = 720)
 
 ```
+
+
+```{r , echo=TRUE,message=FALSE}
+# Results from my custom wrapper
+#  tfb[366] on (-20,40) in basis representation:
+#  using  2 FPCs 
+# 1: (-20,7);(-19,7);(-18,7); ...
+# 2: (-20,6);(-19,7);(-18,7); ...
+# 3: (-20,7);(-19,7);(-18,7); ...
+# 4: (-20,7);(-19,7);(-18,7); ...
+# 5: (-20,7);(-19,7);(-18,7); ...
+#     [....]   (361 not shown)
+
+
+# Results from the solution into a tfd object after building the plot
+# > tfd(Pred_mat, arg = seq)
+# tfd[366] on (-20,40) based on 61 evaluations each
+# interpolation by tf_approx_linear 
+# [1]: (-20,7);(-19,7);(-18,7); ...
+# [2]: (-20,6);(-19,6);(-18,6); ...
+# [3]: (-20,7);(-19,7);(-18,7); ...
+# [4]: (-20,7);(-19,7);(-18,7); ...
+# [5]: (-20,7);(-19,7);(-18,7); ...
+#     [....]   (361 not shown)
+
+
+```
+
 
 # US all-cause excess and Covid-19 mortality
 
@@ -358,7 +387,7 @@ cols <- c(
 # ─── Plot ────────────────────────────────
 #Exploratory plots and analyses
 
-ggplot(df_tibble) +
+x <-ggplot(df_tibble) +
   geom_spaghetti(aes(y = mortality, colour = highlight, group = state),alpha =0.6) +
   scale_colour_manual(values = cols, name = "States") +
   scale_x_continuous(
@@ -368,6 +397,7 @@ ggplot(df_tibble) +
   ) +
   labs(y = "US states weekly excess deaths / million") +
   theme_minimal()
+ggsave("figure4-1.png",x, width = 8, height = 6, dpi = 720)
 
 ```
 
@@ -435,12 +465,13 @@ For week 40, the five states with the highest excess mortality rates per million
 
 ### K-means clustering of the functional data
 
-```{r , include=TRUE,fig.width=9,message=FALSE}
+```{r , include=TRUE, fig.width = 9, message = FALSE}
 # ──────────────── K-means clustering of the functional data ──────────────────────────────
 
 rownames(Wd) <- states
 set.seed(1000)
-km    <- kmeans(Wd, centers = 3)
+# We are going to  run k-means 30 times and returns the best result
+km <- kmeans(Wd, centers = 3, nstart = 30)
 cl_ind <- km$cluster
 cl_cen <- km$centers
 
@@ -459,9 +490,9 @@ centers_tbl <- tibble(
 )
 
 # Plot with corrected date handling
-tf_plot_clusters_tf(cluster_tbl, centers_tbl) +
+  tf_plot_clusters_tf(cluster_tbl, centers_tbl) +
   scale_color_manual(
-    values = c("#AA00FF","green", "#FF6D00"),
+    values =  c("#FF0000", "darkgreen", "#0000FF"),
     name   = "Cluster"
   ) +
   scale_x_continuous(
@@ -483,17 +514,19 @@ tf_plot_clusters_tf(cluster_tbl, centers_tbl) +
     name = "Weeks starting January 2020"
   ) +
   labs(
-    y = "Excess mortality per million",
-    title = "K-Means Clustering of State Excess-Mortality Curves"
+    y = "Excess mortality per million"#,
+    #title = "K-Means Clustering of State Excess-Mortality Curves"
   ) +
   theme_minimal(base_size = 14)
+
 ```
 
 ```{r , include=TRUE}
 ##  ─── US MAP PLOT ──────────────────────
 
 # color per group as per the book
-colset <- c(rgb(0.41, 0.05, 0.68), rgb(0, 1, 0), rgb(1, .55, 0))
+colset <- c(rgb(1, 0, 0), rgb(0, 100/255, 0), rgb(0, 0, 1))
+  
 
 ## load state date which contains FIPS code
 data("statepop")
@@ -567,7 +600,7 @@ us_map_df <- us_map("states")
 
 
 # Convert state_plot_df to sf object and transform to match us_map_df
-state_plot_sf <- state_plot_df %>%
+ state_plot_sf <- state_plot_df %>%
   st_as_sf(coords = c("lon", "lat"), crs = 4326) %>%  # WGS84 (lat/lon)
   st_transform(st_crs(us_map_df)) %>%  # Transform to match us_map_df projection
   # Extract transformed coordinates
@@ -577,7 +610,7 @@ state_plot_sf <- state_plot_df %>%
   ) %>%
   st_drop_geometry()  # Remove geometry column to work with regular dataframe
 
- ggplot() +
+x <-ggplot() +
   # First add the map layer using geom_sf
   geom_sf(data = us_map_df,
           fill = "white",
@@ -587,14 +620,16 @@ state_plot_sf <- state_plot_df %>%
   geom_capellini(data = state_plot_sf,
                  aes(x = x_proj, y = y_proj, tf = curve, colour = cluster),
                  width = 300000, height = 400000, line.linetype = 1) +  # Adjusted size for projected coords
-  scale_color_manual(values = c("#AA00FF", "green", "#FF6D00"), name = "Cluster") +
+  scale_color_manual(values = c("#FF0000", "darkgreen", "#0000FF"),
+                     name = "Cluster") +
   coord_sf() +
   theme_minimal() +
-  labs(title = "US States Excess Mortality Curves with Cluster Colors",
+  labs(#title = "US States Excess Mortality Curves with Cluster Colors",
        # or just "Longitude"
        x = "Longitude (°)",  
        ,# or just "Latitude"
        y = "Latitude (°)" )
+ggsave("figure4-4.png",x, width = 8, height = 6, dpi = 720)
 
 ```
 
@@ -610,33 +645,41 @@ hc <- hclust(dist_matrix, method = "ward.D2")
 
 # ─── plot  ───────────
 
-fviz_dend(hc,
-          k = 5,
-          rect = TRUE,  
-          rect_fill  = FALSE, 
-          k_colors = c("#E69A8DFF", "#F6D55C", "#2A9D8F", "#5F4B8BFF", "#ee7600"),
-          lwd = 1,         
-          cex = 0.5,         
-          main = "Hierarchical clustering on the square Euclidian distances",
-          xlab = "Observations",
-          ylab = "Distance (Ward.D2)",
-          ggtheme = theme_minimal())+
+dendrogram_plot <- fviz_dend(hc,
+                             k = 5,
+                             rect = TRUE,  
+                             rect_fill = FALSE, 
+                             k_colors = c("#E69A8DFF", "#F6D55C", "#2A9D8F", "#5F4B8BFF", "#ee7600"),
+                             lwd = 1,         
+                             cex = 0.5,         
+                             #main = "Hierarchical clustering on the square Euclidian distances",
+                             xlab = "Observations",
+                             ylab = "Distance (Ward.D2)",
+                             ggtheme = theme_minimal()) +
   scale_y_continuous(labels = function(x) {
-            ifelse(x == 0, "0", paste0(scales::comma(x/1000), "K"))
-          })
+    ifelse(x == 0, "0", paste0(scales::comma(x/1000), "K"))
+  })
+
+# Display the plot
+ dendrogram_plot
 ```
 
 
 
 ```{r , include=TRUE, fig.width=7,fig.height=7}
 # ─── Hierarchical clustering ────────────────────
+cluster_assignments <- cutree(hc, k = 5)
+
 rownames(Wd) <- states
 
 # the 52 states in dendrogram order
 state_order <- rownames(Wd)[hc$order]
 
 # for each state, its position in that order
-row_order_vec  <- match(states, state_order)        
+row_order_vec  <- match(states, state_order)
+
+cluster_colors <- c("#E69A8DFF", "#F6D55C", "#2A9D8F", "#5F4B8BFF", "#ee7600")
+state_colors <- cluster_colors[cluster_assignments[states]]
 
 # ─── Build tidyfun tibble ───────────────────────────────────────────────────
 #this results in a tibble where each state has its own curve
@@ -645,22 +688,25 @@ df_tf <- tibble(
   # wrap  52-length vectors as tfd as per usual
   mortality = tfd(Wd, arg = tnum),   
   # numeric: 1–52 in cluster order
-  row_order = row_order_vec          
+  row_order = row_order_vec,
+  cluster = cluster_assignments[states],  # Add cluster assignment
+  state_color = state_colors              # Add state color
 )
-## # A tibble: 52 × 3
-##    state                                                  mortality row_order
-##    <chr>                                                  <tfd_reg>     <int>
-##  1 Alabama               [1]: ( 3,  0.8);(10,  7.5);(17,-15.2); ...        19
-##  2 Alaska                [2]: ( 3,   -5);(10,   25);(17,    7); ...         5
-##  3 Arizona               [3]: ( 3,   -7);(10,    6);(17,    6); ...        18
-##  4 Arkansas              [4]: ( 3,   -7);(10,   28);(17,   -1); ...        36
-##  5 California            [5]: ( 3,    5);(10,    2);(17,    4); ...        33
-##  6 Colorado              [6]: ( 3,    3);(10,    7);(17,    4); ...        45
-##  7 Connecticut           [7]: ( 3,  0.3);(10,  0.8);(17,  3.1); ...        40
-##  8 Delaware              [8]: ( 3,   14);(10,   -1);(17,   -9); ...        51
-##  9 District of Columbia  [9]: ( 3,    3);(10,    8);(17,   49); ...        39
-## 10 Florida              [10]: ( 3,    6);(10,   10);(17,    8); ...        15
+## # A tibble: 52 × 5
+##    state                                             mortality row_order cluster
+##    <chr>                                             <tfd_reg>     <int>   <int>
+##  1 Alabama          [1]: ( 3,  0.8);(10,  7.5);(17,-15.2); ...        19       1
+##  2 Alaska           [2]: ( 3,   -5);(10,   25);(17,    7); ...         5       2
+##  3 Arizona          [3]: ( 3,   -7);(10,    6);(17,    6); ...        18       1
+##  4 Arkansas         [4]: ( 3,   -7);(10,   28);(17,   -1); ...        36       1
+##  5 California       [5]: ( 3,    5);(10,    2);(17,    4); ...        33       1
+##  6 Colorado         [6]: ( 3,    3);(10,    7);(17,    4); ...        45       3
+##  7 Connecticut      [7]: ( 3,  0.3);(10,  0.8);(17,  3.1); ...        40       3
+##  8 Delaware         [8]: ( 3,   14);(10,   -1);(17,   -9); ...        51       3
+##  9 District of Co…  [9]: ( 3,    3);(10,    8);(17,   49); ...        39       3
+## 10 Florida         [10]: ( 3,    6);(10,   10);(17,    8); ...        15       1
 ## # ℹ 42 more rows
+## # ℹ 1 more variable: state_color <chr>
 
 # ─── Plot  ───────────────────────────────────────────────────
 
@@ -669,7 +715,7 @@ df_tf <- tibble(
 breaks_orig <- c(-50, seq(-40, 130, by = 1), 200, 250, 300)
 colors_orig <- viridis::plasma(length(breaks_orig))
 
-gglasagna(
+ x <- gglasagna(
   df_tf,
   tf = mortality,
   order = row_order,
@@ -690,16 +736,29 @@ gglasagna(
     labels = seq_along(current_date)
   )+
   labs(
-    title = "Heatmap of 2020 Weekly Excess Mortality\nStates ordered by hierarchical clustering",
+    #title = "Heatmap of 2020 Weekly Excess Mortality\nStates ordered by hierarchical clustering",
     caption = ""
   ) +
   theme_minimal(base_size = 12) +
   theme(
-    #axis.text.y = element_text(size = 6),
+       axis.text.y = element_text(
+      size = 6, 
+      color = df_tf$state_color[order(df_tf$row_order)]
+    ),
     axis.text.x = element_text(size = 6, angle = 90, vjust = 0.5, hjust=1),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank()
   )
+
+
+
+df_tf <- tibble(
+  state = states,
+  # wrap  52-length vectors as tfd as per usual
+  mortality = tfd(Wd, arg = tnum),   
+  # numeric: 1–52 in cluster order
+  row_order = row_order_vec
+)
 ```
 
 
@@ -737,15 +796,15 @@ data_cluster <- statepop %>%
 
 # ─── Plot  ───────────────────────────────────────────────────
 
-plot_usmap(regions = "states", data = data_cluster, values = "cluster") +
+ plot_usmap(regions = "states", data = data_cluster, values = "cluster") +
   scale_fill_manual(
     name = "Cluster", 
     values = clust.col#,
     #labels = cluster_names
   ) +
   labs(
-    title = "COVID-19 Excess Mortality Clusters",
-    subtitle = "States grouped by temporal mortality patterns"
+    #title = "COVID-19 Excess Mortality Clusters",
+    #subtitle = "States grouped by temporal mortality patterns"
   ) +
   theme(
     legend.position = "bottom",
@@ -755,7 +814,6 @@ plot_usmap(regions = "states", data = data_cluster, values = "cluster") +
     plot.subtitle = element_text(hjust = 0.5, size = 12)
   ) +
   guides(fill = guide_legend(nrow = 1))
-
 ```
 
 
@@ -836,7 +894,7 @@ state_plot_sf <- state_plot_df %>%
 
 cluster_colors <- c("#E69A8DFF", "#F6D55C", "#2A9D8F", "#5F4B8BFF", "#ee7600")
 
-ggplot() +
+ ggplot() +
   geom_sf(data = us_map_df,
           fill = "white",
           color = "black",
@@ -851,7 +909,7 @@ ggplot() +
   coord_sf() +
   theme_minimal(base_size = 12) +
   labs(
-    title = "US States Excess Mortality Curves with Cluster Colors",
+    #title = "US States Excess Mortality Curves with Cluster Colors",
     x = "Longitude (°)",
     y = "Latitude (°)"
   ) +
@@ -859,7 +917,6 @@ ggplot() +
     plot.title = element_text(hjust = 0.5, face = "bold"),
     legend.position = "right"
   )
-
 ```
 
 ### Distributional clustering
@@ -875,7 +932,23 @@ X_scaled <- scale(Wd) %>% as.data.frame()
 
 # Fit Gaussian Mixture Model using BIC
 bic <- mclustBIC(X_scaled)
+# Bayesian Information Criterion (BIC): 
+#         EII       VII       EEI       VEI       EVI       VVI
+# 1 -7830.529 -7830.529 -8032.042 -8032.042 -8032.042 -8032.042
+# 2 -7609.035 -7612.616 -7774.047 -7777.983 -7778.249 -7778.502
+# 3 -7480.743 -7389.161 -7533.148 -7475.997 -7688.448 -7577.282
+# 4 -7372.236 -7257.856 -7381.381 -7320.383 -7772.885 -7625.539
+# 5 -7358.711        NA -7359.944        NA        NA        NA
+# 6 -7391.220        NA -7402.952        NA        NA        NA
+# 7 -7410.073        NA -7485.683        NA        NA        NA
+# 8 -7408.936        NA -7400.588        NA        NA        NA
+# 9 -7428.796        NA -7439.884        NA        NA        NA
+# 
+# Top 3 models based on the BIC criterion: 
+#     VII,4     VEI,4     EII,5 
+# -7257.856 -7320.383 -7358.711 
 gmm_model <- Mclust(X_scaled, x = bic)
+#'Mclust' model object: (VII,4) 
 clusters <- gmm_model$classification
 
 # Merge clustering results with state population data
@@ -887,13 +960,14 @@ data_cluster <- statepop %>%
   select(fips, cluster)
 
 # Plot the US map
- plot_usmap(regions = "states", data = data_cluster, values = "cluster") +
+  plot_usmap(regions = "states", data = data_cluster, values = "cluster") +
   scale_fill_manual(name = "Cluster", values = cluster_colors) +
   labs(title = "") +
   theme(
     legend.position = "right",
     plot.title = element_text(hjust = 0.5, face = "bold")
   )
+
 
 # Print the map with adjusted margins
 par(mar = c(4, 4, 1, 1))
@@ -974,7 +1048,7 @@ state_plot_sf <- state_plot_df %>%
 
 colset <- c("#E69A8DFF", "#F6D55C", "#2A9D8F", "#5F4B8BFF")
 
-ggplot() +
+x <- ggplot() +
   geom_sf(data = us_map_df, fill = "white", color = "black", size = 0.2) +
   
   geom_capellini(
@@ -987,8 +1061,8 @@ ggplot() +
   coord_sf() +
   theme_minimal(base_size = 12) +
   labs(
-    title = "US States: Model-Based Clustering of Excess Mortality Curves",
-    subtitle = "Gaussian Mixture Model (Mclust) with 4 clusters",
+    #title = "US States: Model-Based Clustering of Excess Mortality Curves",
+    #subtitle = "Gaussian Mixture Model (Mclust) with 4 clusters",
     x = "Longitude", y = "Latitude"
   ) +
   theme(
@@ -996,6 +1070,9 @@ ggplot() +
     plot.title = element_text(hjust = 0.5, face = "bold"),
     plot.subtitle = element_text(hjust = 0.5)
   )
+
+ggsave("figure4-10.png",x, width = 8, height = 6, dpi = 720)
+
 ```
 
 

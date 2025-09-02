@@ -129,6 +129,7 @@ centers_tbl <- tibble(cluster = factor(seq_len(nrow(km_res$centers))),
                       curve   = centers_tf)
 
 pred_tf     <- tfd(Pred_mat, arg = tgrid)
+#tfb_fpc(Pred_mat, arg = tgrid)
 cluster_tbl <- tf_join_clusters_tf(pred_tf, km_res$cluster)
 
 

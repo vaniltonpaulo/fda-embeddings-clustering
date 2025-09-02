@@ -62,7 +62,7 @@ names(COVID19)
 ## [11] "States_CV19_mortality"               "States_CV19_mortality_per_million"
 ```
 
-```{r helpers,echo = TRUE}
+```{r helpers, echo = TRUE}
 # ───────────── helpers ───────────────────
 # Converts calendar dates to numeric values 
 # The tfd requires numeric values and not as dates values.
@@ -123,7 +123,7 @@ year_ticks <- nat_weekly %>%
 ```
 
 
-```{r , include=TRUE}
+```{r nat-weekly, include=TRUE}
 # ────────── Turn into tfd ─────────────
 nat_weekly_tfd <- tfd(
 # We reshape the deaths into a 1-row matrix so it’s  one curve through 2017 to 2020.
@@ -163,7 +163,7 @@ ggplot() +
   theme_classic() 
 ```
 
-FIGURE 1.1: The weekly death counts in the United States from 14 of January 2017 to 26 of December 2020. Each point corresponds to a single week, with deaths reported in thousands. For instance, in the week of 5 May 2018 , there were 53,874 deaths nationwide.
+Each point corresponds to a single week, with deaths reported in thousands. For instance, in the week of 5 May 2018, there were 53,874 deaths nationwide. Our areas of interest are highlighted in the years 2019 (blue) and 2020 (red).
 
 #### Weekly US COVID-19 mortality data
 
@@ -218,7 +218,9 @@ ggplot(excess_tibble, aes(y = curve, colour = death_type)) +
   theme_classic() 
 ```
 
-FIGURE 1.2: The total weekly U.S. mortality caused by COVID-19 alongside estimated excess deaths.The blue points represent excess mortality, calculated as the difference between the total deaths in a given week of 2020 and the corresponding week in 2019. The red points indicate the number of deaths each week directly caused by COVID-19.
+The total weekly U.S. mortality caused by COVID-19 alongside estimated excess deaths. The blue points represent excess mortality, calculated as the difference between the total deaths in a given week of 2020 and the corresponding week in 2019. The red points indicate the number of deaths each week directly caused by COVID-19.
+
+These functions share a very similar visual pattern. However, all-cause excess mortality is higher than COVID-19 mortality in every single week, especially during the summer.
 
 Total excess deaths before the week ending on 26 december 2020.
 
@@ -257,7 +259,7 @@ cum_mat <- t(apply(rate_mat, 1, cumsum))
 
 # ────────────── Turn into tfd ──────────────────
 
-#Thus tfd object, a data structure where each functional curve represents a distinct state.
+# Thus tfd object, a data structure where each functional curve represents a distinct state.
 state_tf <- tfd(cum_mat, arg = num_grid(current_date))
 # tfd[52] on (0,357) based on 52 evaluations each
 # interpolation by tf_approx_linear 
@@ -292,7 +294,7 @@ state_df <- tibble(
 
 # ── Plot ────────────────
 
-#Emphasized states
+# Emphasized states
 emph_states <- c("New Jersey", "Louisiana", "California", "Maryland", "Texas")
 emph_cols <- c("darkseagreen3", "red", "plum3", "deepskyblue4", "salmon")
 
@@ -321,7 +323,9 @@ ggplot() +
   theme(legend.position = "right")
 ```
 
-FIGURE 1.3: Each U.S. state,the lines track the cumulative weekly all-cause excess mortality per million for each U.S. state. Five states receive special focus and are distinguished by color: New Jersey (green), Louisiana (red), California (plum),Maryland (blue) and Texas (salmon).All remaining states are in grey including Puerto Rico and District of Colombia.
+The curves are the cumulative weekly all-cause excess mortality (per million) for each U.S. state. Five states receive special focus and are distinguished by color: New Jersey (green), Louisiana (red), California (plum), Maryland (blue) and Texas(salmon). All remaining states are in grey including Puerto Rico and District of Columbia.
+
+From the emphasized states, New Jersey had the highest cumulative excess deaths per million in the US, with most deaths occurring between April and June. 
 
 #### Plot of COVID-19 cumulative data
 
@@ -370,7 +374,7 @@ covid_df <- tibble(
 # ℹ 42 more rows
 
 # ─────────── Plot ────────────────
-#Plot of COVID-19 cumulative data
+# Plot of COVID-19 cumulative data
 
 ggplot() +
   geom_spaghetti(
@@ -399,4 +403,7 @@ ggplot() +
   theme(legend.position = "right")
 ```
 
-FIGURE 1.4: Each U.S. state,the lines track the cumulative COVID-19 mortality for each U.S. state. Five states receive special focus and are distinguished by color: New Jersey (green), Louisiana (red), California (plum),Maryland (blue) and Texas (salmon).All remaining states are in grey including Puerto Rico and District of Colombia.
+The curves are the cumulative COVID-19 mortality (per million) for each U.S. state. Five states receive special focus and are distinguished by color: New Jersey (green), Louisiana (red), California (plum), Maryland (blue) and Texas (salmon). All remaining states are in grey including Puerto Rico and District of Columbia.
+
+
+Notably, while the trajectories across states and territories generally align, COVID-19 deaths tend to be lower than the all-cause excess mortality.
